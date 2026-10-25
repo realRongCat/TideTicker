@@ -75,17 +75,18 @@ macOS 13 或以上，从 [GitHub Releases](https://github.com/realRongCat/TideTi
 | 维护者 | [领域语义](./CONTEXT.md) · [现役设计](./DESIGN.md) · [架构决策](./docs/adr) |
 | Coding Agent | [AGENTS.md](./AGENTS.md) |
 
-## ⭐ Star History
-
-<p align="center">
-  <a href="https://www.star-history.com/#realRongCat/TideTicker&Date">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date&theme=dark">
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date">
-      <img alt="TideTicker Star History" src="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date" width="640">
-    </picture>
-  </a>
-</p>
+<details>
+  <summary><strong>⭐ Star History</strong></summary>
+  <p align="center">
+    <a href="https://www.star-history.com/#realRongCat/TideTicker&Date">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date&theme=dark">
+        <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date">
+        <img alt="TideTicker Star History" src="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date" width="640">
+      </picture>
+    </a>
+  </p>
+</details>
 
 <p align="center">
   使用 <a href="./LICENSE">MIT License</a> 开源 · Made by <a href="https://x.com/rongcat">@rongcat</a>
