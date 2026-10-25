@@ -12,7 +12,19 @@
 - [ ] Markdown links resolve locally and public documentation describes current behavior.
 - [ ] Third-party license and asset notices are present.
 
-## Public binary release
+## Public ad-hoc test package
+
+Use this section when a GitHub Release includes a downloadable DMG before
+Developer ID signing and notarization are available:
+
+- [ ] Build the Universal app and archives from the exact tagged release commit with `bash scripts/build-dmg.sh`.
+- [ ] Verify both `arm64` and `x86_64` slices, the ad-hoc code signature, DMG image, extracted ZIP, executable permissions, and SHA-256 files.
+- [ ] Install the DMG outside the source tree and exercise launch, quote loading, update checking, and the main settings flow.
+- [ ] Name the DMG `TideTicker-<version>-universal.dmg` and upload it together with its `.sha256` file.
+- [ ] State prominently in the README and Release notes that the package is ad-hoc signed, not notarized, and may require “Open Anyway”.
+- [ ] Do not describe the package as an official signed or notarized macOS build.
+
+## Official binary release
 
 Do not publish a binary as an official TideTicker release until all items below pass for the exact release commit and artifact:
 
