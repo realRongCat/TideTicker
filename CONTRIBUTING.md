@@ -62,6 +62,15 @@ To exercise the update prompt without querying GitHub, replace `--disable-update
 
 Restore normal application preferences after any acceptance check that intentionally used the regular configuration.
 
+Kindle UI changes also require the local Paperwhite layout simulator. It covers both the 600 CSS-pixel viewport and the legacy 1072 CSS-pixel WebKit model before a physical-device check:
+
+```sh
+npm install
+npm run kindle:verify
+```
+
+Use `npm run kindle:preview` for an interactive three-card view. Generated screenshots stay under the ignored `outputs/kindle-preview/` directory.
+
 ## Repository layout
 
 ```text

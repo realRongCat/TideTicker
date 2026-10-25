@@ -120,7 +120,7 @@ public enum KindleDisplaySnapshotFactory {
             return KindleDisplayQuote(
                 contractID: contract.id,
                 instrumentID: contract.instrumentID,
-                title: contract.displayTitle,
+                title: contract.pairTitle,
                 marketKind: contract.marketKind.title,
                 priceKind: contract.priceKind.title,
                 price: quote.map { PriceFormatting.compact($0.price) } ?? "--",

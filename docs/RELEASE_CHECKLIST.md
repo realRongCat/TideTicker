@@ -11,9 +11,10 @@
 - [ ] Public Git files contain no build products, preferences, raw evidence, research output, local paths, proxy settings, alert thresholds, credentials, or opaque private archives.
 - [ ] Markdown links resolve locally and public documentation describes current behavior.
 - [ ] Third-party license and asset notices are present.
-- [ ] Kindle display is disabled by default in a clean profile, and enabling it triggers the macOS local-network permission path.
+- [ ] Kindle display is disabled by default in a clean app UserDefaults domain, and enabling it triggers the macOS local-network permission path.
 - [ ] Kindle page, snapshot, health, wrong-token, unsupported-method, `HEAD`, ETag `304`, and LAN-address responses match the documented read-only contract.
-- [ ] At 600 x 800 and the target Kindle viewport, the page stays one card per row with no horizontal overflow, uneven quote-card heights, or truncated market/supplement fields; one/two-card expanded density and three/four-card compact density both fit, while toolbar hiding and user-triggered fullscreen degrade cleanly.
+- [ ] `npm run kindle:verify` passes the 600 CSS-pixel/DPR-scaled model, the 1072 CSS-pixel/DPR-1 legacy WebKit model, and ignored-iframe-height simulation; one/two/three-card and pending-alert fixtures have zero Companion scroll overflow, a bottom safety margin, equal heights, centered content, unclipped text, and no overlap.
+- [x] On Kindle Paperwhite 3 firmware `5.16.2.1.1`, the Companion page stays one card per row, matches the local typography model, fills one screen with three cards and no vertical scrollbar, and hides the browser chrome (verified 2026-10-26).
 - [ ] A supported physical Kindle opens the tokenized address and survives a two-hour page reload; record firmware/model and verify that reboot exits the optional always-on Companion kiosk.
 
 ## Public ad-hoc test package

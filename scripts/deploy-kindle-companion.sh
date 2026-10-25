@@ -42,10 +42,13 @@ base_url="http://$host:$port/k/$token/"
     fail "the TideTicker Kindle service is not reachable; enable it before deployment"
 
 destination="$volume/tideticker-companion"
+dashboard_source="$task_root/Sources/MarkBarApp/Resources/Kindle/index.html"
+ui_revision=$(/usr/bin/shasum -a 256 "$dashboard_source" | /usr/bin/awk '{ print substr($1, 1, 12) }')
 /bin/mkdir -p "$destination/waf" "$destination/state"
 /usr/bin/ditto "$task_root/KindleCompanion/waf" "$destination/waf"
-/usr/bin/install -m 644 "$task_root/Sources/MarkBarApp/Resources/Kindle/index.html" "$destination/waf/dashboard.html"
-/usr/bin/printf "var TIDE_TICKER_URL = '%s';\n" "$base_url" > "$destination/waf/settings.js"
+/usr/bin/install -m 644 "$dashboard_source" "$destination/waf/dashboard.html"
+/usr/bin/printf "var TIDE_TICKER_URL = '%s';\nvar TIDE_TICKER_UI_REVISION = '%s';\n" \
+    "$base_url" "$ui_revision" > "$destination/waf/settings.js"
 /usr/bin/install -m 755 "$task_root/KindleCompanion/scriptlets/TideTicker.sh" "$volume/documents/TideTicker.sh"
 /usr/bin/install -m 755 "$task_root/KindleCompanion/scriptlets/TideTicker-Exit.sh" "$volume/documents/TideTicker-Exit.sh"
 /usr/bin/install -m 755 "$task_root/KindleCompanion/scriptlets/TideTicker-Uninstall.sh" "$volume/documents/TideTicker-Uninstall.sh"

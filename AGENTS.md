@@ -26,6 +26,6 @@
 ## 验证与交付
 
 - Swift 行为改动运行相关单元测试；跨模块、产品名或打包改动运行 `swift test` 和 `bash scripts/build-app.sh`。纯文档改动检查内容、命令和本地链接即可。
-- UI 验收优先使用 `--preferences-file /tmp/<独立名称>.json`，按需加 `--show-settings`、`--ui-snapshot /tmp/<独立名称>.json`。该参数只隔离业务偏好和 `.profiles.json` 旁车，并跳过登录项注册；图标开关仍写真实 UserDefaults，通知授权仍属于系统级。恢复验收前的日常配置。
+- UI 验收优先使用 `--preferences-file /tmp/<独立名称>.json`，按需加 `--show-settings`、`--ui-snapshot /tmp/<独立名称>.json`。该参数只隔离业务偏好和 `.profiles.json` 旁车，并跳过登录项注册；图标开关以及 Kindle 的开关、令牌和展示间隔仍写真实 UserDefaults，通知授权仍属于系统级。恢复验收前的日常配置。
 - 构建脚本只生成并 ad-hoc 签名 `dist/TideTicker.app`，安装、重启和系统功能验证单独执行。通知与登录项需在 app bundle 中验证；单元测试、进程存在或登录项 enabled 不能代替实际投递和重登录验收。
 - `docs/evidence/` 是本机忽略的原始验收材料，不进入公开仓库。公开结论写入 `CHANGELOG.md` 或发布说明，并区分离线测试、真实接口、安装版交互及未验证项；历史成功不能作为当前网络可达性的证明。

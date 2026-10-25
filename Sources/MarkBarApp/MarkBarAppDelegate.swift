@@ -36,7 +36,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private var timeItems: [Contract: NSMenuItem] = [:]
     private var errorItems: [Contract: NSMenuItem] = [:]
     private let quoteStatusItem = NSMenuItem(title: "行情状态", action: nil, keyEquivalent: "")
-    private let sourceItem = NSMenuItem(title: "行情来源与设置…", action: nil, keyEquivalent: ",")
+    private let sourceItem = NSMenuItem(title: "行情来源…", action: nil, keyEquivalent: ",")
     private let alertsItem = NSMenuItem(title: "到价提醒…", action: nil, keyEquivalent: "3")
     private let externalDisplayItem = NSMenuItem(title: "外部显示…", action: nil, keyEquivalent: "")
     private let recentAlertItem = NSMenuItem(title: "最近提醒", action: nil, keyEquivalent: "")
@@ -299,7 +299,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         addAction("显示主窗口", symbol: "macwindow", action: #selector(showMainWindow), key: "1", to: app)
         addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), key: "2", to: app)
         addAction("到价提醒…", symbol: "bell", action: #selector(showAlerts), key: "3", to: app)
-        addAction("行情来源与设置…", symbol: "slider.horizontal.3", action: #selector(showSource), key: ",", to: app)
+        addAction("行情来源…", symbol: "slider.horizontal.3", action: #selector(showSource), key: ",", to: app)
         addAction("外部显示…", symbol: "display.2", action: #selector(showExternalDisplay), to: app)
         addAction("高级设置…", symbol: "gearshape", action: #selector(showAdvancedSettings), to: app)
         app.addItem(.separator())
@@ -806,7 +806,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         } else {
             recentAlertItem.isHidden = true
         }
-        TideMenuStyle.setColumns(sourceItem, "行情来源与设置…", preferences.networkMode.title, muted: true)
+        TideMenuStyle.setColumns(sourceItem, "行情来源…", preferences.networkMode.title, muted: true)
         TideMenuStyle.setColumns(externalDisplayItem, "外部显示…", externalDisplayStatus, muted: true)
         updateOverview(now: now)
         renderLoginItem()

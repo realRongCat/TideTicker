@@ -37,12 +37,27 @@
         runInStatusBar("nativeBridge.showMe();nativeBridge.setIntLipcProperty('com.lab126.powerd','preventScreenSaver',0);");
       }
 
+      function sizeDashboard(frame) {
+        if (!frame) return;
+        var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 600;
+        var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+        var layoutWidth = 600;
+        var scale = viewportWidth / layoutWidth;
+        frame.style.width = layoutWidth + "px";
+        frame.style.height = Math.ceil(viewportHeight / scale) + "px";
+        frame.style.webkitTransformOrigin = "0 0";
+        frame.style.webkitTransform = "scale(" + scale + ")";
+      }
+
       function openDisplay() {
         closed = false;
         try { kindle.net.setWirelessState("on"); } catch (error) {}
         runInStatusBar("nativeBridge.hideMe();nativeBridge.setIntLipcProperty('com.lab126.powerd','preventScreenSaver',1);");
         var frame = document.getElementById("dashboard");
-        frame.src = "dashboard.html?companion=1&base=" + encodeURIComponent(TIDE_TICKER_URL);
+        var revision = typeof TIDE_TICKER_UI_REVISION === "string" ? TIDE_TICKER_UI_REVISION : "";
+        var cacheKey = revision + "-" + (new Date()).getTime();
+        frame.src = "dashboard.html?companion=1&ui=" + encodeURIComponent(cacheKey) + "&base=" + encodeURIComponent(TIDE_TICKER_URL);
+        sizeDashboard(frame);
         frame.style.display = "block";
         document.getElementById("fallback").style.display = "none";
       }
@@ -57,12 +72,13 @@
         api.applicationManager.addEventListener("pause", restoreSystemUI);
         api.applicationManager.addEventListener("unload", restoreSystemUI);
       });
+      window.onresize = function () { sizeDashboard(document.getElementById("dashboard")); };
     }());
   </script>
   <style>
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; color: #000; }
     body { font: bold 28px/1.35 sans-serif; text-align: center; }
-    #dashboard { display: none; width: 100%; height: 100%; border: 0; }
+    #dashboard { display: none; border: 0; }
     #fallback { padding: 40px; }
   </style>
 </head>

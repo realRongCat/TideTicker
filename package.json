@@ -1,0 +1,14 @@
+{
+  "name": "tideticker-development-tools",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "kindle:preview": "node scripts/kindle-preview.mjs --headed",
+    "kindle:verify": "node scripts/kindle-preview.mjs --check"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

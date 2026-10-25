@@ -14,6 +14,7 @@
 /research/
 /HANDOFF.md
 /KindleCompanion/waf/settings.js
+/node_modules/
 
 # macOS and editor state
 .DS_Store

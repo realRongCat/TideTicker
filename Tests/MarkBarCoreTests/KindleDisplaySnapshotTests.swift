@@ -30,6 +30,7 @@ final class KindleDisplaySnapshotTests: XCTestCase {
         XCTAssertEqual(result.revision, 9)
         XCTAssertEqual(result.sessionPhase, "WebSocket 连续行情")
         XCTAssertEqual(result.quotes.count, 1)
+        XCTAssertEqual(result.quotes[0].title, "BTC/USDT")
         XCTAssertEqual(result.quotes[0].priceKind, "标记价")
         XCTAssertEqual(result.quotes[0].route, "WebSocket")
         XCTAssertEqual(result.quotes[0].supplement?.change24h, "+1.25%")

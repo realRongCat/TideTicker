@@ -7,59 +7,66 @@
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; min-height: 100%; background: #fff; color: #000; }
-    body { font-family: Helvetica, Arial, "Droid Sans Fallback", sans-serif; font-size: 22px; font-weight: bold; line-height: 1.25; padding: 10px; -webkit-text-size-adjust: none; }
-    .header { display: table; width: 100%; border-bottom: 4px solid #000; padding: 3px 0 8px; }
+    body { font-family: Helvetica, Arial, "Droid Sans Fallback", sans-serif; font-size: 20px; font-weight: bold; line-height: 1.25; padding: 10px; -webkit-text-size-adjust: none; }
+    .header { display: table; width: 100%; border-bottom: 4px solid #000; padding: 4px 2px 7px; }
     .header-left, .header-right { display: table-cell; vertical-align: middle; }
     .header-right { text-align: right; white-space: nowrap; }
-    h1 { margin: 0; font-size: 1.25em; letter-spacing: 0; }
-    .status { display: inline-block; border: 3px solid #000; padding: 3px 8px; font-size: .66em; }
+    h1 { margin: 0; font-size: 34px; line-height: 1.08; letter-spacing: 0; }
+    .status { display: inline-block; border: 3px solid #000; margin-right: 3px; padding: 4px 9px; font-size: 18px; line-height: 1.1; }
     .status.live { color: #fff; background: #000; }
-    .toolbar { display: table; width: 100%; padding: 8px 0; }
-    .toolbar-left, .toolbar-right { display: table-cell; vertical-align: middle; }
-    .toolbar-right { text-align: right; }
-    button { min-width: 42px; height: 42px; margin: 0 0 0 5px; padding: 2px 10px; border: 3px solid #000; background: #fff; color: #000; font: bold 22px/1 Helvetica, Arial, sans-serif; }
+    button { min-width: 45px; height: 45px; margin: 0 0 0 5px; padding: 2px 9px; border: 3px solid #000; background: #fff; color: #000; font: bold 24px/1 Helvetica, Arial, sans-serif; }
     button:active { background: #000; color: #fff; }
-    .page-label { font-size: .72em; }
-    .alert { display: none; border: 4px solid #000; background: #000; color: #fff; padding: 9px 11px; margin-bottom: 8px; }
-    .alert-title { font-size: .78em; }
-    .alert-detail { font-size: .68em; margin-top: 4px; }
-    .quote { border: 3px solid #000; margin-bottom: 8px; padding: 8px 10px; min-height: 122px; }
-    .quote.stale { border-width: 6px; padding: 5px 7px; }
+    .page-label { font-size: 21px; }
+    .alert { display: none; border: 4px solid #000; background: #000; color: #fff; padding: 8px 11px; margin-bottom: 8px; }
+    .alert-title { font-size: 20px; }
+    .alert-detail { font-size: 18px; margin-top: 3px; }
+    .quote { border: 3px solid #000; margin-bottom: 8px; padding: 7px 10px; min-height: 122px; }
+    .quote.stale { border-width: 6px; padding: 4px 7px; }
     .quote-head { display: table; width: 100%; }
     .quote-name, .quote-flags { display: table-cell; vertical-align: top; }
-    .quote-name { font-size: .82em; }
-    .quote-flags { text-align: right; font-size: .58em; white-space: nowrap; }
-    .flag { display: inline-block; border: 2px solid #000; padding: 2px 5px; margin-left: 3px; }
+    .quote-name { font-size: 25px; line-height: 1.1; }
+    .quote-flags { text-align: right; font-size: 16px; white-space: nowrap; }
+    .flag { display: inline-block; border: 2px solid #000; padding: 2px 5px; margin-left: 4px; }
     .flag.invert { background: #000; color: #fff; }
-    .instrument { display: none; font-size: .58em; margin-top: 3px; }
-    .price-row { display: table; width: 100%; margin-top: 3px; }
+    .instrument { font-size: 18px; margin-top: 3px; }
+    .price-row { display: table; width: 100%; margin-top: 4px; }
     .price, .basis { display: table-cell; vertical-align: baseline; }
-    .price { font-family: Menlo, Monaco, monospace; font-size: 1.72em; line-height: 1.08; white-space: nowrap; }
-    .price.small { font-size: 1.3em; }
-    .basis { text-align: right; font-size: .58em; white-space: nowrap; }
-    .meta, .supplement { font-size: .58em; margin-top: 4px; }
-    .supplement { border-top: 2px solid #000; padding-top: 4px; }
-    .metrics { display: none; border-top: 3px solid #000; margin-top: 8px; padding-top: 6px; width: 100%; }
-    .metric { display: inline-block; vertical-align: top; width: 50%; padding: 3px 8px 3px 0; }
-    .metric-label { display: block; font-size: .5em; }
-    .metric-value { display: block; font-size: .72em; margin-top: 1px; }
-    .quote.expanded { padding: 12px 14px; }
-    .quote.expanded .quote-name { font-size: 1em; }
-    .quote.expanded .instrument { display: block; }
-    .quote.expanded .price { font-size: 2em; }
-    .quote.expanded .price.small { font-size: 1.55em; }
-    .quote.expanded .meta { font-size: .62em; margin-top: 6px; }
+    .price { font-family: Menlo, Monaco, monospace; font-size: 32px; line-height: 1.06; white-space: nowrap; }
+    .price.small { font-size: 28px; }
+    .basis { text-align: right; font-size: 18px; white-space: nowrap; padding-left: 10px; }
+    .meta, .supplement { font-size: 17px; margin-top: 3px; }
+    .supplement { border-top: 2px solid #000; padding-top: 3px; }
+    .metrics { display: none; border-top: 3px solid #000; margin-top: 9px; padding-top: 7px; width: 100%; }
+    .metric { display: inline-block; vertical-align: top; width: 50%; padding: 3px 10px 4px 0; }
+    .metric-label { display: block; font-size: 18px; line-height: 1.08; }
+    .metric-value { display: block; font-size: 23px; line-height: 1.08; margin-top: 2px; }
+    .quote.medium { padding: 6px 12px; }
+    .quote.medium .quote-name { font-size: 28px; }
+    .quote.medium .instrument { font-size: 19px; line-height: 1.1; margin-top: 1px; }
+    .quote.medium .price-row { margin-top: 0; }
+    .quote.medium .price { font-size: 44px; }
+    .quote.medium .price.small { font-size: 36px; }
+    .quote.medium .basis { font-size: 20px; }
+    .quote.medium .meta { font-size: 20px; line-height: 1.05; margin-top: 1px; }
+    .quote.medium .supplement { display: none; }
+    .quote.medium .metrics { display: block; margin-top: 2px; padding-top: 3px; }
+    .quote.medium .metric { width: 25%; padding: 0 8px 0 0; }
+    .quote.medium .metric-label { line-height: 1; }
+    .quote.medium .metric-value { line-height: 1; margin-top: 1px; }
+    .quote.expanded { padding: 11px 13px; }
+    .quote.expanded .quote-name { font-size: 28px; }
+    .quote.expanded .price { font-size: 46px; }
+    .quote.expanded .price.small { font-size: 37px; }
+    .quote.expanded .basis { font-size: 20px; }
+    .quote.expanded .meta { font-size: 20px; margin-top: 7px; }
     .quote.expanded .supplement { display: none; }
     .quote.expanded .metrics { display: block; }
     .quote.expanded.roomy { position: relative; }
-    .quote.expanded.roomy .quote-name { font-size: 1.08em; }
-    .quote.expanded.roomy .price-row { position: absolute; left: 14px; right: 14px; top: 25%; width: auto; }
-    .quote.expanded.roomy .price { font-size: 2.5em; }
-    .quote.expanded.roomy .price.small { font-size: 1.85em; }
-    .quote.expanded.roomy .meta { position: absolute; left: 14px; right: 14px; top: 44%; }
-    .quote.expanded.roomy .metrics { position: absolute; left: 14px; right: 14px; bottom: 12px; width: auto; }
-    .empty { border: 3px solid #000; padding: 28px 12px; text-align: center; }
-    .footer { border-top: 3px solid #000; padding-top: 6px; font-size: .55em; display: table; width: 100%; }
+    .quote.expanded.roomy .price-row { position: absolute; left: 13px; right: 13px; top: 27%; width: auto; }
+    .quote.expanded.roomy .meta { position: absolute; left: 13px; right: 13px; top: 47%; }
+    .quote.expanded.roomy .metrics { position: absolute; left: 13px; right: 13px; bottom: 10px; width: auto; }
+    .empty { border: 3px solid #000; padding: 28px 12px; text-align: center; font-size: 18px; }
+    .footer { border-top: 3px solid #000; padding-top: 5px; font-size: 18px; display: table; width: 100%; }
     .footer-left, .footer-right { display: table-cell; }
     .footer-right { text-align: right; }
     #flash { display: none; position: fixed; z-index: 9999; left: 0; top: 0; right: 0; bottom: 0; background: #000; }
@@ -67,10 +74,10 @@
 </head>
 <body>
   <div id="flash"></div>
-  <div class="header"><div class="header-left"><h1>TideTicker</h1></div><div class="header-right"><span id="connection" class="status">连接中</span></div></div>
-  <div class="toolbar">
-    <div class="toolbar-left"><span id="source" class="page-label">等待行情</span></div>
-    <div class="toolbar-right">
+  <div class="header">
+    <div class="header-left"><h1>TideTicker</h1></div>
+    <div class="header-right">
+      <span id="connection" class="status">连接中</span>
       <button type="button" title="上一页" onclick="previousPage()">&#8249;</button>
       <span id="page" class="page-label">1/1</span>
       <button type="button" title="下一页" onclick="nextPage()">&#8250;</button>
@@ -88,6 +95,7 @@
     var updateCount = 0;
     var failureCount = 0;
     var bootTime = (new Date()).getTime();
+    var companionMode = /[?&]companion=1(?:&|$)/.test(window.location.search) || window.self !== window.top;
     function queryParameter(name) {
       var match = window.location.search.match(new RegExp("(?:[?&])" + name + "=([^&]*)"));
       return match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
@@ -96,9 +104,19 @@
     if (apiBase.indexOf("http://") !== 0) apiBase = "";
     function text(el, value) { el.textContent = value === null || value === undefined ? "" : String(value); }
     function node(tag, className, value) { var el = document.createElement(tag); if (className) el.className = className; if (value !== undefined) text(el, value); return el; }
-    function pageSize() { return 4; }
-    function hideBrowserChrome() {
+    function pageSize() { return currentData && currentData.pendingAlert ? 2 : 3; }
+    function layoutHeight() {
       var height = window.innerHeight || 800;
+      return companionMode && height > 800 ? 800 : height;
+    }
+    function hideBrowserChrome() {
+      var height = layoutHeight();
+      if (companionMode) {
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        document.body.style.minHeight = height + "px";
+        return;
+      }
       document.body.style.minHeight = (height + 1) + "px";
       window.scrollTo(0, 1);
     }
@@ -115,12 +133,29 @@
       }, 700);
     }
     function setupFullscreen() {
-      if (/[?&]companion=1(?:&|$)/.test(window.location.search) || window.self !== window.top) return;
+      if (companionMode) return;
       var root = document.documentElement;
       var request = root.requestFullscreen || root.webkitRequestFullscreen || root.webkitRequestFullScreen || root.mozRequestFullScreen;
       if (request) document.getElementById("fullscreen").style.display = "inline-block";
     }
-    function displayTime(value) { if (!value) return "--:--:--"; var match = String(value).match(/T(\d\d:\d\d:\d\d)/); return match ? match[1] : String(value); }
+    function pad2(value) { return value < 10 ? "0" + value : String(value); }
+    function beijingParts(value) {
+      if (!value) return null;
+      var match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/);
+      if (!match) return null;
+      var timestamp = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6]));
+      var date = new Date(timestamp + 8 * 60 * 60 * 1000);
+      return { month: pad2(date.getUTCMonth() + 1), day: pad2(date.getUTCDate()),
+               time: pad2(date.getUTCHours()) + ":" + pad2(date.getUTCMinutes()) + ":" + pad2(date.getUTCSeconds()) };
+    }
+    function beijingStamp(value) {
+      var parts = beijingParts(value);
+      return parts ? parts.month + "-" + parts.day + " " + parts.time : "-- --:--:--";
+    }
+    function beijingTime(value) {
+      var parts = beijingParts(value);
+      return parts ? parts.time : "--:--:--";
+    }
     function addFlag(parent, label, inverted) { var flag = node("span", "flag" + (inverted ? " invert" : ""), label); parent.appendChild(flag); }
     function addMetric(parent, label, value) {
       if (value === null || value === undefined) return;
@@ -135,13 +170,36 @@
       var cards = container.getElementsByClassName("quote");
       var top = container.getBoundingClientRect ? container.getBoundingClientRect().top : 120;
       var footerHeight = document.getElementById("summary").parentNode.offsetHeight || 28;
-      var available = (window.innerHeight || 800) - top - footerHeight - 18;
+      var bottomSafety = companionMode ? 30 : 18;
+      var available = layoutHeight() - top - footerHeight - bottomSafety;
       var target = Math.floor((available - ((count - 1) * 8)) / count);
-      var minimum = count <= 2 ? 210 : 122;
+      var minimum = count <= 2 ? 210 : 170;
       target = Math.max(minimum, target);
+      if (count === 3) target = Math.min(target, 184);
+      if (currentData && currentData.pendingAlert) target = Math.min(target, 220);
       for (var i = 0; i < cards.length; i++) {
         cards[i].style.minHeight = target + "px";
+        if (count === 3 || (currentData && currentData.pendingAlert)) cards[i].style.height = target + "px";
         if (count <= 2 && target >= 280) cards[i].className += " roomy";
+        if ((" " + cards[i].className + " ").indexOf(" medium ") >= 0) {
+          cards[i].style.paddingTop = "6px";
+          var blocks = cards[i].querySelectorAll(".quote-head, .instrument, .price-row, .meta, .metrics");
+          var firstBlock = null;
+          var lastBlock = null;
+          for (var j = 0; j < blocks.length; j++) {
+            if (window.getComputedStyle(blocks[j]).display !== "none") {
+              if (!firstBlock) firstBlock = blocks[j];
+              lastBlock = blocks[j];
+            }
+          }
+          if (firstBlock && lastBlock) {
+            var firstRect = firstBlock.getBoundingClientRect();
+            var lastRect = lastBlock.getBoundingClientRect();
+            var contentHeight = lastRect.bottom - firstRect.top;
+            var centeredTop = Math.max(6, Math.floor((cards[i].offsetHeight - contentHeight) / 2));
+            cards[i].style.paddingTop = centeredTop + "px";
+          }
+        }
       }
     }
     function renderAlert(data) {
@@ -162,10 +220,12 @@
       var start = (currentPage - 1) * size;
       var end = Math.min(start + size, quotes.length);
       var visibleCount = end - start;
-      var expanded = visibleCount <= 2;
+      var expanded = visibleCount <= 2 && !data.pendingAlert;
+      var medium = visibleCount === 3 || !!data.pendingAlert;
       for (var i = start; i < end; i++) {
         var quote = quotes[i];
-        var card = node("div", "quote" + (quote.isStale ? " stale" : "") + (expanded ? " expanded" : ""));
+        var density = expanded ? " expanded" : (medium ? " medium" : "");
+        var card = node("div", "quote" + (quote.isStale ? " stale" : "") + density);
         var head = node("div", "quote-head");
         head.appendChild(node("div", "quote-name", quote.title));
         var flags = node("div", "quote-flags");
@@ -178,7 +238,10 @@
         priceRow.appendChild(node("div", "price" + (quote.price.length > 15 ? " small" : ""), quote.price));
         priceRow.appendChild(node("div", "basis", quote.priceKind + " · " + quote.quoteCurrency));
         card.appendChild(priceRow);
-        card.appendChild(node("div", "meta", "数据 " + displayTime(quote.dataTime) + " · " + (quote.route || "等待连接") + " · " + quote.continuity));
+        var timeLine = "数据 " + beijingTime(quote.dataTime);
+        if (quote.possiblyMissed) timeLine += " · " + quote.continuity;
+        else if (quote.hasError) timeLine += " · 等待重试";
+        card.appendChild(node("div", "meta", timeLine));
         if (data.supplementalEnabled && quote.supplement) {
           var extra = "24h " + quote.supplement.change24h;
           if (quote.supplement.fundingRate !== null) extra += " · 费率 " + quote.supplement.fundingRate;
@@ -202,9 +265,8 @@
       currentData = data;
       document.getElementById("connection").className = "status live";
       text(document.getElementById("connection"), "在线");
-      text(document.getElementById("source"), data.exchange + " · " + data.sessionPhase);
       text(document.getElementById("summary"), (data.quotes || []).length + " 个关注品种");
-      text(document.getElementById("updated"), "更新 " + displayTime(data.generatedAt));
+      text(document.getElementById("updated"), "北京时间 " + beijingStamp(data.generatedAt));
       renderAlert(data); renderQuotes(data);
     }
     function previousPage() { if (currentPage > 1) { currentPage--; if (currentData) renderQuotes(currentData); } }
