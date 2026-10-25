@@ -17,6 +17,14 @@ TideTicker does not transmit the local watchlist or alert thresholds to a
 TideTicker server. Exchange requests necessarily identify the requested public
 instrument. System notifications are delivered by macOS.
 
+When automatic update checks are enabled, or when the user manually checks for
+updates, TideTicker requests the latest stable release metadata from GitHub's
+public API. The request includes the installed TideTicker version in its
+standard HTTP User-Agent. It does not include the watchlist, alert thresholds,
+exchange selection, or diagnostics. GitHub receives the network information
+normally exposed by an HTTPS request. Automatic checks can be disabled from
+the application menu; manual checks remain available.
+
 Questions about this policy can be raised through the repository's public
 issue tracker without including private configuration, alert thresholds, IP
 addresses, proxy details, or diagnostic logs.

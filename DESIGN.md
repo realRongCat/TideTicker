@@ -18,6 +18,7 @@ TideTicker 是 macOS 菜单栏行情观察工具，不是交易终端。它不�
 | 主报价会话 | WS 生命周期、逐品种健康、REST 兜底、过期、取消与 generation 隔离 | `MainQuoteSession.swift`, `OKXWebSocketClient.swift` |
 | 提醒 | 五类条件、冷却、待确认事件和规则级重建基准 | `PriceAlerts.swift`, `PriceAlertSubmission.swift` |
 | 偏好 | 来源 profile、关注、常驻、网络和提醒持久化与迁移 | `TidePreferences.swift` |
+| 版本更新 | SemVer、GitHub Release 校验、ETag、退避、稍后提醒与跳过版本 | `ReleaseUpdates.swift`, `GitHubReleaseClient.swift` |
 | App | 菜单、主窗口、通知、登录项和休眠恢复 | `MarkBarAppDelegate.swift`, `Tide*Page.swift` |
 
 `MarkBarCore` 不依赖 AppKit。应用层通过主报价会话的单一更新接口消费状态，不直接管理 WebSocket 重连或 REST 退避。
@@ -85,6 +86,14 @@ REST 样本始终标记为可能漏报。旧时间戳或重复样本不会改变
 - 退出：停止计时器、报价消费、登录项观察和 AppKit 状态项。
 
 通知授权在启动、应用重新激活、用户请求授权和唤醒时刷新并缓存，高频报价路径不查询系统设置。
+
+## 版本更新
+
+`ReleaseUpdateMonitor` 独立于行情模块，按严格稳定版 SemVer 比较 Bundle 版本和 GitHub Release 标签。GitHub 客户端只访问 `api.github.com/repos/realRongCat/TideTicker/releases/latest`，限制响应大小，并校验发布页仍属于 TideTicker 官方仓库。ETag、检查时间、失败退避、稍后提醒和跳过版本保存在独立更新状态中，不进入交易所 profile。
+
+自动检查默认开启：启动后延迟 20 至 60 秒，随后由低频调度器驱动；监视模块保证正常间隔约 4 小时，失败后按 30 分钟、1 小时、4 小时退避。唤醒和应用激活只触发到期检查。所有更新请求使用系统 URLSession，不沿用行情物理直连模式，失败不改变报价、连续性或提醒状态。
+
+App 层的 `TideUpdateController` 串行化检查并驱动菜单与非激活浮层。浮层自动收起等同 24 小时后提醒；菜单中的新版本入口持续存在。当前源码发布阶段仅打开校验后的 GitHub Release 页面，不下载或替换应用。具备 Developer ID、公证和签名更新源后，再单独评估 Sparkle 自动安装。
 
 ## 验证边界
 

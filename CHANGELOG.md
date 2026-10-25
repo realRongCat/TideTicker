@@ -3,6 +3,11 @@
 This project follows semantic versioning from its first public source release.
 Dates use the Asia/Shanghai calendar date.
 
+## 0.2.0 - 2026-10-25
+
+- Add automatic and manual GitHub Release checks, a persistent update menu entry, and a non-activating update prompt.
+- Add a standard About panel that shows the installed version and build number.
+
 ## 0.1.0 - 2026-10-25
 
 - First public source release under the MIT License.

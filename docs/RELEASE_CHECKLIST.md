@@ -3,6 +3,8 @@
 ## Public source release
 
 - [ ] Version and build number are consistent in `Resources/Info.plist`, README, changelog, and artifact names.
+- [ ] The Git tag is a stable semantic version matching `CFBundleShortVersionString`, and the GitHub Release is neither draft nor pre-release.
+- [ ] Manual update checking reports the current version; an injected newer fixture shows the floating prompt and persistent menu entry.
 - [ ] `swift test` passes from a clean checkout.
 - [ ] `bash -n scripts/*.sh` and `plutil -lint Resources/Info.plist` pass.
 - [ ] `bash scripts/build-app.sh` succeeds and `codesign --verify --deep --strict` passes.

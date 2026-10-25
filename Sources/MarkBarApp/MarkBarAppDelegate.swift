@@ -41,6 +41,12 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private let marketDetailsItem = NSMenuItem(title: "显示补充行情", action: nil, keyEquivalent: "")
     private let refreshItem = NSMenuItem(title: "立即刷新", action: nil, keyEquivalent: "r")
     private let applicationRefreshItem = NSMenuItem(title: "立即刷新", action: nil, keyEquivalent: "r")
+    private let updateAvailableItem = NSMenuItem(title: "发现新版本", action: nil, keyEquivalent: "")
+    private let checkUpdatesItem = NSMenuItem(title: "检查更新…", action: nil, keyEquivalent: "")
+    private let applicationCheckUpdatesItem = NSMenuItem(title: "检查更新…", action: nil, keyEquivalent: "")
+    private let automaticUpdatesItem = NSMenuItem(title: "自动检查更新", action: nil, keyEquivalent: "")
+    private let aboutItem = NSMenuItem(title: "关于 TideTicker", action: nil, keyEquivalent: "")
+    private let applicationAboutItem = NSMenuItem(title: "关于 TideTicker", action: nil, keyEquivalent: "")
     private let symbolStyleItem = NSMenuItem(title: "菜单栏使用币种图标", action: nil, keyEquivalent: "")
     private let loginItem = NSMenuItem(title: "登录时启动", action: nil, keyEquivalent: "")
     private let loginInfoItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -64,6 +70,8 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private let loginMonitor = LoginItemMonitor(service: SystemLoginItemService())
     private var alertEngine = PriceAlertEngine()
     private let notificationDelegate = TideNotificationDelegate()
+    private var updateController: TideUpdateController?
+    private var updateMenuState: TideUpdateMenuState = .idle
     private var notificationAuthorizationStatus: UNAuthorizationStatus?
     private var lastPresentedNotificationID: String?
     private let snapshotURL: URL?
@@ -116,6 +124,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         statusItem?.menu = menu
         statusItem?.button?.imagePosition = .imageOnly
         statusItem?.button?.imageScaling = .scaleNone
+        configureUpdateController()
         registerWorkspaceNotifications()
         loginMonitor.onChange = { [weak self] in
             guard let self, !self.terminating else { return }
@@ -152,6 +161,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     func applicationDidBecomeActive(_ notification: Notification) {
         loginMonitor.refreshIfNeeded(force: true)
         updateNotificationStatus()
+        updateController?.checkIfDue()
     }
 
     private func configureSettingsCallbacks() {
@@ -171,7 +181,8 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private func buildMenu() {
         // Reused items may currently belong to a nested menu retained by AppKit.
         for item in [refreshItem, quoteStatusItem, recentAlertItem, sourceItem, alertsItem, symbolStyleItem,
-                     marketDetailsItem, loginItem, loginInfoItem, loginSettingsItem] {
+                     marketDetailsItem, loginItem, loginInfoItem, loginSettingsItem, automaticUpdatesItem,
+                     updateAvailableItem, checkUpdatesItem, aboutItem] {
             item.menu?.removeItem(item)
         }
         menu.removeAllItems()
@@ -224,7 +235,17 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         options.addItem(loginInfoItem)
         configureAction(loginSettingsItem, symbol: "gearshape", action: #selector(openLoginSettings)); options.addItem(loginSettingsItem)
         menu.addItem(.separator())
+        configureAction(updateAvailableItem, symbol: "arrow.down.circle.fill", action: #selector(showAvailableUpdate))
+        menu.addItem(updateAvailableItem)
+        configureAction(checkUpdatesItem, symbol: "arrow.triangle.2.circlepath", action: #selector(checkForUpdates))
+        menu.addItem(checkUpdatesItem)
+        configureAction(aboutItem, symbol: "info.circle", action: #selector(showAboutPanel))
+        menu.addItem(aboutItem)
+        menu.addItem(.separator())
         addAction("退出 TideTicker", symbol: "rectangle.portrait.and.arrow.right", action: #selector(quitApp), key: "q")
+        configureAction(automaticUpdatesItem, symbol: "arrow.triangle.2.circlepath", action: #selector(toggleAutomaticUpdates))
+        options.insertItem(automaticUpdatesItem, at: max(0, options.numberOfItems - 3))
+        renderUpdateItems()
     }
 
     private func configureAction(_ item: NSMenuItem, symbol: String, action: Selector) {
@@ -251,6 +272,11 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         let main = NSMenu()
         let app = NSMenu(title: "TideTicker")
         let appItem = NSMenuItem(); appItem.submenu = app; main.addItem(appItem)
+        configureAction(applicationAboutItem, symbol: "info.circle", action: #selector(showAboutPanel))
+        app.addItem(applicationAboutItem)
+        configureAction(applicationCheckUpdatesItem, symbol: "arrow.triangle.2.circlepath", action: #selector(checkForUpdates))
+        app.addItem(applicationCheckUpdatesItem)
+        app.addItem(.separator())
         addAction("显示主窗口", symbol: "macwindow", action: #selector(showMainWindow), key: "1", to: app)
         addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), key: "2", to: app)
         addAction("到价提醒…", symbol: "bell", action: #selector(showAlerts), key: "3", to: app)
@@ -276,6 +302,89 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         window.addItem(NSMenuItem(title: "关闭窗口", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
         NSApplication.shared.mainMenu = main
         NSApplication.shared.windowsMenu = window
+        renderUpdateItems()
+    }
+
+    private func configureUpdateController() {
+        let arguments = ProcessInfo.processInfo.arguments
+        let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        guard let versionString = shortVersion, let currentVersion = AppVersion(versionString) else {
+            checkUpdatesItem.isEnabled = false
+            applicationCheckUpdatesItem.isEnabled = false
+            return
+        }
+        func argument(after key: String) -> String? {
+            guard let index = arguments.firstIndex(of: key), arguments.indices.contains(index + 1) else { return nil }
+            return arguments[index + 1]
+        }
+        let fixtureVersion = argument(after: "--update-fixture-version").flatMap(AppVersion.init)
+        let fetcher: any ReleaseUpdateFetching
+        if let fixtureVersion {
+            let tag = "v\(fixtureVersion)"
+            let release = AppRelease(
+                version: fixtureVersion,
+                tagName: tag,
+                title: "TideTicker \(fixtureVersion)",
+                publishedAt: Date(),
+                releaseURL: URL(string: "https://github.com/realRongCat/TideTicker/releases/tag/\(tag)")!
+            )
+            fetcher = TideStaticReleaseFetcher(release: release)
+        } else {
+            fetcher = GitHubReleaseClient(appVersion: versionString)
+        }
+        let automaticAllowed = fixtureVersion != nil || (
+            Bundle.main.bundleURL.pathExtension == "app"
+                && preferencesURL == nil
+                && !arguments.contains("--disable-update-checks")
+        )
+        let controller = TideUpdateController(
+            currentVersion: currentVersion,
+            fetcher: fetcher,
+            defaults: defaults,
+            automaticChecksAllowed: automaticAllowed,
+            stateStore: fixtureVersion == nil ? nil : TideVolatileUpdateStateStore(),
+            anchor: { [weak self] in self?.statusItem }
+        )
+        controller.onMenuStateChange = { [weak self] state in
+            guard let self else { return }
+            self.updateMenuState = state
+            self.renderUpdateItems()
+            self.writeSnapshot(now: Date())
+        }
+        controller.onAutomaticChecksChange = { [weak self] _ in self?.renderUpdateItems() }
+        updateController = controller
+        renderUpdateItems()
+        controller.start()
+        if fixtureVersion != nil { controller.checkNow() }
+    }
+
+    private func renderUpdateItems() {
+        let automaticallyChecks = updateController?.automaticallyChecks
+            ?? (defaults.object(forKey: TideUpdateController.automaticChecksKey) as? Bool ?? true)
+        automaticUpdatesItem.state = automaticallyChecks ? .on : .off
+        automaticUpdatesItem.isEnabled = updateController != nil
+        switch updateMenuState {
+        case .idle:
+            updateAvailableItem.isHidden = true
+            checkUpdatesItem.title = "检查更新…"
+            applicationCheckUpdatesItem.title = "检查更新…"
+            checkUpdatesItem.isEnabled = updateController != nil
+            applicationCheckUpdatesItem.isEnabled = updateController != nil
+        case .checking:
+            updateAvailableItem.isHidden = true
+            checkUpdatesItem.title = "正在检查更新…"
+            applicationCheckUpdatesItem.title = "正在检查更新…"
+            checkUpdatesItem.isEnabled = false
+            applicationCheckUpdatesItem.isEnabled = false
+        case let .available(release):
+            updateAvailableItem.title = "发现新版本 \(release.version)…"
+            updateAvailableItem.isHidden = false
+            updateAvailableItem.isEnabled = true
+            checkUpdatesItem.title = "再次检查更新…"
+            applicationCheckUpdatesItem.title = "再次检查更新…"
+            checkUpdatesItem.isEnabled = true
+            applicationCheckUpdatesItem.isEnabled = true
+        }
     }
 
     private func applyPreferences(_ proposed: TidePreferences) {
@@ -764,6 +873,29 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     }
     @objc private func toggleCoinIcons() { defaults.set(!showsCoinIcons, forKey: Self.symbolStyleKey); render() }
     @objc private func toggleMarketDetails() { settingsModel.update { $0.showsMarketDetails.toggle() } }
+    @objc private func toggleAutomaticUpdates() {
+        guard let updateController else { return }
+        updateController.setAutomaticallyChecks(!updateController.automaticallyChecks)
+    }
+    @objc private func checkForUpdates() { updateController?.checkNow() }
+    @objc private func showAvailableUpdate() { updateController?.presentAvailableUpdate() }
+    @objc private func showAboutPanel() {
+        let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发构建"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+        let credits = NSMutableAttributedString(string: "开源项目 · GitHub\n")
+        let linkText = NSAttributedString(
+            string: "github.com/realRongCat/TideTicker",
+            attributes: [.link: URL(string: "https://github.com/realRongCat/TideTicker")!]
+        )
+        credits.append(linkText)
+        NSApplication.shared.orderFrontStandardAboutPanel(options: [
+            .applicationName: "TideTicker",
+            .applicationVersion: shortVersion,
+            .version: build.isEmpty ? "" : "构建 \(build)",
+            .credits: credits,
+        ])
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
     @objc private func showMainWindow() { presentWindow() }
     @objc private func showOverview() { presentWindow(page: .overview) }
     @objc private func showWatchlist() { presentWindow(page: .watchlist) }
@@ -984,6 +1116,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
             self.refreshDetailsIfNeeded()
         }
         render()
+        updateController?.checkIfDue()
     }
 
     private func configureDefaultLoginItem() {
@@ -1022,6 +1155,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         guard !terminating else { return .terminateNow }
         terminating = true; generation &+= 1; catalogueGeneration &+= 1
         loginMonitor.stop()
+        updateController?.stop()
         timer?.invalidate(); cancelMarketTasks(); resumeTask?.cancel(); catalogueTask?.cancel()
         render()
         let catalogueClient = catalogueClient, detailsClient = detailsClient
@@ -1034,6 +1168,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     }
     func applicationWillTerminate(_ notification: Notification) {
         loginMonitor.stop()
+        updateController?.stop()
         timer?.invalidate()
         quoteUpdatesTask?.cancel()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
@@ -1073,6 +1208,16 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
             }
             return state
         }
+        let updateStatus: String
+        let availableUpdateVersion: Any
+        switch updateMenuState {
+        case .idle:
+            updateStatus = "idle"; availableUpdateVersion = NSNull()
+        case .checking:
+            updateStatus = "checking"; availableUpdateVersion = NSNull()
+        case let .available(release):
+            updateStatus = "available"; availableUpdateVersion = release.version.description
+        }
         let snapshot: [String: Any] = [
             "renderedAt": iso.string(from: now), "exchange": preferences.exchange.rawValue,
             "networkMode": preferences.networkMode.rawValue,
@@ -1096,6 +1241,9 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
             "defaultLoginRegistrationSuppressed": suppressDefaultLoginRegistration, "quotes": quoteStates,
             "catalogueCount": settingsModel.catalogue.count, "catalogueLoading": settingsModel.catalogLoading,
             "settingsMessage": settingsModel.message, "notificationStatus": settingsModel.notificationStatus,
+            "updateStatus": updateStatus, "availableUpdateVersion": availableUpdateVersion,
+            "automaticUpdateChecks": updateController?.automaticallyChecks ?? false,
+            "updatePanelVisible": updateController?.isPanelVisible ?? false,
             "lastPresentedNotificationID": lastPresentedNotificationID as Any? ?? NSNull(),
             "alertCount": preferences.alerts.count, "enabledAlertCount": preferences.alerts.filter(\.isEnabled).count,
             "pendingAlertCount": preferences.pendingAlerts.count,
