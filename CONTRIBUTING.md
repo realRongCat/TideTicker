@@ -2,6 +2,8 @@
 
 TideTicker is a Swift Package Manager project for macOS 13 and later. Contributions should preserve the user-facing quote and alert semantics documented by the project rather than redefining them inside implementation code.
 
+For installation and product usage, see the [user guide](./docs/USER_GUIDE.md).
+
 ## Before you start
 
 - Read [CONTEXT.md](./CONTEXT.md) before changing contract identity, quote fields, timestamps, or product copy.

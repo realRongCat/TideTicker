@@ -1,76 +1,99 @@
-# TideTicker
+<p align="center">
+  <img src="./docs/images/tideticker-logo-rounded.png" width="116" alt="TideTicker logo">
+</p>
 
-<img src="./Resources/tide-logo-black-white-20261015.png" alt="TideTicker logo" width="128">
+<h1 align="center">TideTicker</h1>
 
-原生 macOS 菜单栏加密货币行情工具。无需交易账户或 API Key，只观察行情，不提供交易或下单能力。
+<p align="center">
+  <strong>让行情，一目了然。</strong><br>
+  原生 macOS 菜单栏加密货币行情观察工具
+</p>
 
-[下载最新版本](https://github.com/realRongCat/TideTicker/releases/latest) · [更新记录](./CHANGELOG.md) · [MIT License](./LICENSE)
+<p align="center">
+  <a href="https://github.com/realRongCat/TideTicker/releases/latest"><img src="https://img.shields.io/github/v/release/realRongCat/TideTicker?style=flat-square&label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-111111?style=flat-square&logo=apple" alt="macOS 13 or later">
+  <img src="https://img.shields.io/badge/Universal-arm64%20%7C%20x86__64-2ea44f?style=flat-square" alt="Universal arm64 and x86_64">
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/realRongCat/TideTicker?style=flat-square" alt="MIT License"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/realRongCat/TideTicker/releases/latest"><strong>下载最新版</strong></a>
+  · <a href="./docs/USER_GUIDE.md">使用指南</a>
+  · <a href="./CHANGELOG.md">更新记录</a>
+</p>
 
 ![TideTicker 行情概览](./docs/images/tideticker-overview.png)
 
-## 功能
+## ✨ 功能
 
-- 在菜单栏常驻最多两条报价，固定显示币种图标、币种和价格。
-- 从 OKX、Binance、Bybit 的官方目录中选择最多 20 个关注品种。
-- 支持 USDT 现货、USDT 线性永续和 USD 币本位永续；现货显示最新成交价，永续显示标记价。
-- 可选显示补充行情：现货显示 24 小时涨跌，永续显示资金费率、距结算倒计时和同所现货溢折价。
-- 提供本地价格提醒。通知会写明交易所、原生合约、价格口径和阈值，也可要求确认后再重新布防。
-- 分别标记报价是否过期、行情是否可能漏报，帮助识别断线、REST 采样和休眠恢复带来的观察空档。
-- 自动检查 GitHub 稳定版 Release，发现新版本后显示非抢焦点提示，并保留菜单入口。
+| | |
+| --- | --- |
+| **菜单栏常驻**<br>最多两条，始终保持图标、币种和价格 | **多市场观察**<br>OKX、Binance、Bybit，最多关注 20 个品种 |
+| **清晰报价口径**<br>现货看最新成交价，永续看标记价 | **永续风险快照**<br>资金费率、结算倒计时和同所现货溢折价 |
+| **本地到价提醒**<br>支持确认后重新布防，并明确提示可能漏报 | **版本感知**<br>自动发现 GitHub 稳定版 Release |
+| **Kindle 展示**<br>将当前关注行情投送到同一局域网中的 Kindle | **完整市场身份**<br>在电子墨水屏上仍区分现货、永续与报价口径 |
 
-## 安装
+## 📦 安装
 
-当前公开版本为 **0.2.0**，需要 macOS 13 或以上。从 [GitHub Releases](https://github.com/realRongCat/TideTicker/releases/latest) 下载 `TideTicker-0.2.0-universal.dmg`，打开后将 TideTicker 拖入“应用程序”。
+macOS 13 或以上，从 [GitHub Releases](https://github.com/realRongCat/TideTicker/releases/latest) 下载 Universal DMG。
 
-安装包同时包含 Apple Silicon 和 Intel 版本。项目目前没有 Apple Developer ID，应用使用 ad-hoc 签名且未经 Apple 公证；首次打开可能需要前往“系统设置”→“隐私与安全性”，在确认下载来源可信后选择“仍要打开”。Intel Mac 的实际运行仍待真机验收。
+> **交给 Agent：** 从 `realRongCat/TideTicker` 的最新 GitHub Release 下载 Universal DMG 和对应的 `.sha256`，校验后安装并启动 `TideTicker.app`；若 Gatekeeper 拦截，请停下并提示我在 macOS“隐私与安全性”中确认。
 
-也可以使用支持 Swift 6 的 Xcode 或 Command Line Tools 从源码构建：
+> [!NOTE]
+> 当前安装包使用 ad-hoc 签名，尚未经过 Apple 公证；Intel 架构已完成编译验证，Intel 真机运行仍待验证。
 
-```sh
-git clone https://github.com/realRongCat/TideTicker.git
-cd TideTicker
-bash scripts/build-app.sh
-open dist/TideTicker.app
-```
+[查看完整安装、首次启动与源码构建说明 →](./docs/USER_GUIDE.md#安装)
 
-源码构建、测试和 Universal 构建说明见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+## 🚀 三步开始
 
-## 开始使用
-
-1. 点击菜单栏报价，选择“显示主窗口”（⌘1）。
-2. 在“关注品种”中选择行情，在“行情来源”中选择交易所和网络模式；关注顺序与两条菜单栏常驻位置可以分别设置。
-3. 在“到价提醒”中创建规则。需要系统通知时，请在 macOS 通知设置中允许 TideTicker 发送通知。
-
-全新配置默认使用 OKX 和系统网络，并将 BTC、ETH 的 USDT 永续标记价常驻菜单栏。“显示补充行情”默认关闭；开启后会在行情卡中展示当前市场可用的全部补充信息，不改变菜单栏的图标、币种和价格布局。
-
-## 行情口径
-
-| 市场 | 主报价 | 报价与结算 |
+| 1. 打开 | 2. 配置 | 3. 提醒 |
 | --- | --- | --- |
-| USDT 现货 | 最新成交价 | USDT 报价 |
-| USDT 线性永续 | 标记价 | USDT 报价、USDT 结算 |
-| USD 币本位永续 | 标记价 | USD 报价、标的币结算 |
+| 点击菜单栏报价，进入主窗口 | 选择交易所、关注品种和两条常驻位置 | 创建本地规则，并允许系统通知 |
 
-永续溢折价只使用同一交易所、同一币种和同一报价币的现货价格。当前 USD 币本位永续没有同报价币参考现货，因此不显示溢折价。
+全新配置默认使用 OKX 和系统网络，常驻 BTC、ETH 的 USDT 永续标记价。补充行情默认关闭，开启后只扩展行情卡，不改变菜单栏布局。
 
-系统网络是默认模式，沿用 macOS 的代理、DNS 和路由。OKX 在该模式下使用 WebSocket 接收主报价，并在连接异常时以 REST 兜底；Binance、Bybit 和物理直连模式使用定时采样。应用不会自动切换交易所、网络模式或地区端点。
+## Kindle 展示
 
-## 提醒边界
+在主窗口打开“Kindle 展示”，启用只读局域网页面，然后让 Kindle 与 Mac 连接同一可信 Wi-Fi，并在 Kindle 体验版浏览器中打开应用给出的地址。页面针对 600 px 电子墨水屏排版，保留完整市场名称、过期/可能漏报状态、补充行情和最近一条待确认提醒；刷新频率可选 5、10、15 或 30 秒。
 
-TideTicker 的提醒只用于辅助观察。网络、代理、系统休眠、交易所异常和本机处理延迟都可能造成漏报，不能替代交易所风控或止损。
+服务默认关闭，只在 TideTicker 运行且用户明确启用时监听局域网。地址带有随机访问令牌，但传输使用局域网 HTTP，令牌不是账户认证；不要在公共或不可信网络中启用。详细步骤见[使用指南](./docs/USER_GUIDE.md#kindle-展示)。
 
-报价过期和行情连续性会分别显示：刚收到的 REST 报价可以是新鲜的，但两次采样之间仍可能错过短暂触价。WebSocket 断线、休眠恢复或切换来源后，穿越类提醒会先用首个有效样本重建基准，不补发空档期间无法确认的穿越。
+## 🧭 行情口径
 
-## 版本与隐私
+| 市场 | 主报价 | 结算 |
+| --- | --- | --- |
+| USDT 现货 | 最新成交价 | USDT |
+| USDT 线性永续 | 标记价 | USDT |
+| USD 币本位永续 | 标记价 | 标的币 |
 
-“关于 TideTicker”显示当前版本和构建号。“检查更新…”会查询 GitHub 最新稳定版；自动检查默认开启，发现新版本后可以打开发布页、延后提醒或跳过该版本。应用不会自行下载或替换程序。
+> [!CAUTION]
+> TideTicker 只辅助观察。网络、休眠、交易所异常和本机延迟都可能造成漏报，不能替代交易所风控或止损。
 
-关注列表、提醒和偏好只保存在本机。应用仅访问所选交易所的公共行情接口；更新检查访问 `api.github.com`，不上传关注列表、提醒阈值或本地诊断信息。完整说明见 [PRIVACY.md](./PRIVACY.md)。
+## 🔒 数据与隐私
 
-## 开发与贡献
+无需交易账户或 API Key，不提供交易和下单能力。关注列表、提醒和偏好只保存在本机；应用访问交易所公共行情接口和 GitHub Release API。启用 Kindle 展示后，还会在本地网络提供带随机令牌的只读 HTTP 页面。详见 [使用指南](./docs/USER_GUIDE.md) 与 [隐私说明](./PRIVACY.md)。
 
-构建、测试、项目结构和 Pull Request 约定见 [CONTRIBUTING.md](./CONTRIBUTING.md)。领域语义见 [CONTEXT.md](./CONTEXT.md)，现役架构见 [DESIGN.md](./DESIGN.md)，重要网络与传输决策记录在 [docs/adr](./docs/adr)。发布维护者另见 [Release checklist](./docs/RELEASE_CHECKLIST.md)。
+## 📚 项目文档
 
-源代码使用 [MIT License](./LICENSE)。币种图标、交易所标识和品牌资产的来源及权利边界见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。安全问题请参阅 [SECURITY.md](./SECURITY.md)。
+| 读者 | 入口 |
+| --- | --- |
+| 使用者 | [完整使用指南](./docs/USER_GUIDE.md) · [更新记录](./CHANGELOG.md) |
+| 贡献者 | [构建与贡献](./CONTRIBUTING.md) · [发布清单](./docs/RELEASE_CHECKLIST.md) |
+| 维护者 | [领域语义](./CONTEXT.md) · [现役设计](./DESIGN.md) · [架构决策](./docs/adr) |
+| Coding Agent | [AGENTS.md](./AGENTS.md) |
 
-Made by [@rongcat](https://x.com/rongcat).
+## ⭐ Star History
+
+<p align="center">
+  <a href="https://www.star-history.com/#realRongCat/TideTicker&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date&theme=dark">
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date">
+      <img alt="TideTicker Star History" src="https://api.star-history.com/svg?repos=realRongCat/TideTicker&type=Date" width="640">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  使用 <a href="./LICENSE">MIT License</a> 开源 · Made by <a href="https://x.com/rongcat">@rongcat</a>
+</p>
