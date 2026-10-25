@@ -22,7 +22,7 @@
   · <a href="./CHANGELOG.md">更新记录</a>
 </p>
 
-![TideTicker 行情概览](./docs/images/tideticker-overview.png)
+![TideTicker 关注行情](./docs/images/tideticker-overview.png)
 
 ## ✨ 功能
 
@@ -31,6 +31,7 @@
 | **菜单栏常驻**<br>最多两条，始终保持图标、币种和价格 | **多市场观察**<br>OKX、Binance、Bybit，最多关注 20 个品种 |
 | **清晰报价口径**<br>现货看最新成交价，永续看标记价 | **永续风险快照**<br>资金费率、结算倒计时和同所现货溢折价 |
 | **本地到价提醒**<br>支持确认后重新布防，并明确提示可能漏报 | **版本感知**<br>自动发现 GitHub 稳定版 Release |
+| **Kindle 局域网展示**<br>同网只读墨水屏视图，可选越狱全屏 Companion | **清晰状态边界**<br>过期、断线、可能漏报和待确认均直接标示 |
 
 ## 📦 安装
 
@@ -64,7 +65,7 @@ macOS 13 或以上，从 [GitHub Releases](https://github.com/realRongCat/TideTi
 
 ## 🔒 数据与隐私
 
-无需交易账户或 API Key，不提供交易和下单能力。关注列表、提醒和偏好只保存在本机；应用仅访问交易所公共行情接口和 GitHub Release API。详见 [使用指南](./docs/USER_GUIDE.md) 与 [隐私说明](./PRIVACY.md)。
+无需交易账户或 API Key，不提供交易和下单能力。关注列表、提醒和偏好只保存在本机；应用访问交易所公共行情接口和 GitHub Release API，启用 Kindle 展示后还会在可信局域网提供只读 HTTP 页面。详见 [使用指南](./docs/USER_GUIDE.md) 与 [隐私说明](./PRIVACY.md)。
 
 ## 📚 项目文档
 
@@ -74,6 +75,8 @@ macOS 13 或以上，从 [GitHub Releases](https://github.com/realRongCat/TideTi
 | 贡献者 | [构建与贡献](./CONTRIBUTING.md) · [发布清单](./docs/RELEASE_CHECKLIST.md) |
 | 维护者 | [领域语义](./CONTEXT.md) · [现役设计](./DESIGN.md) · [架构决策](./docs/adr) |
 | Coding Agent | [AGENTS.md](./AGENTS.md) |
+
+越狱 Kindle 的可选全屏启动器见 [Kindle Companion](./KindleCompanion/README.md)。普通 Kindle 仍可直接使用体验版浏览器访问局域网页。
 
 <details>
   <summary><strong>⭐ Star History</strong></summary>

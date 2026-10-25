@@ -5,7 +5,7 @@ import MarkBarCore
 struct TideOverviewPage: View {
     @ObservedObject var model: TideSettingsModel
     @ObservedObject var quotes: TideOverviewModel
-    let navigate: (TideWindowPage) -> Void
+    let selectMode: (TideMarketMode) -> Void
 
     private var rows: [TideOverviewQuote] {
         model.preferences.watchlist.map { contract in
@@ -20,35 +20,42 @@ struct TideOverviewPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TideStyle.sectionSpacing) {
-                TidePageHeading(title: "行情概览", subtitle: "\(model.preferences.exchange.title) · 现货 · USDT 永续 · 币本位永续") {
-                    Button { model.onRefresh?() } label: {
-                        Label(quotes.snapshot.isRefreshing ? "刷新中" : "刷新行情", systemImage: "arrow.clockwise")
+                TidePageHeading(title: "关注行情", subtitle: "\(model.preferences.exchange.title) · 现货 · USDT 永续 · 币本位永续") {
+                    HStack(spacing: 10) {
+                        TideMarketModePicker(selection: .overview, onSelect: selectMode)
+                        Button { model.onRefresh?() } label: {
+                            Label(quotes.snapshot.isRefreshing ? "刷新中" : "刷新行情", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(quotes.snapshot.isRefreshing || quotes.snapshot.isPaused || rows.isEmpty)
+                        .controlSize(.large)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(quotes.snapshot.isRefreshing || quotes.snapshot.isPaused || rows.isEmpty)
-                    .controlSize(.large)
                 }
                 summary
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        TideSectionHeading(title: "关注行情", symbol: "waveform.path", detail: "最新成交价 / 标记价")
-                        Button("管理") { navigate(.watchlist) }.buttonStyle(.link).font(TideStyle.caption)
+                        TideSectionHeading(title: "实时行情", symbol: "waveform.path", detail: "最新成交价 / 标记价")
+                        Button("管理") { selectMode(.manage) }.buttonStyle(.link).font(TideStyle.caption)
                     }
                     if rows.isEmpty {
                         TideCard {
                             VStack(spacing: 0) {
                                 TideEmptyState(symbol: "star", title: "从一个关注开始", detail: "从官方市场目录添加品种，在这里查看价格与更新状态。")
-                                Button("添加关注品种") { navigate(.watchlist) }
+                                Button("添加关注品种") { selectMode(.manage) }
                                     .buttonStyle(TidePrimaryButtonStyle())
                             }
                             .frame(maxWidth: .infinity).padding(.bottom, 14)
                         }
                     } else {
-                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 220), spacing: 12)],
+                            spacing: 12
+                        ) {
                             ForEach(rows, id: \.contract.id) { row in
                                 TideQuoteCard(row: row, pin: pin(for: row.contract))
                             }
                         }
+                        .frame(maxWidth: 980, alignment: .leading)
                     }
                 }
                 HStack(alignment: .top, spacing: 7) {
@@ -122,7 +129,7 @@ struct TideOverviewPage: View {
 
     private func pin(for contract: Contract) -> String? {
         guard let index = model.preferences.pinnedIDs.firstIndex(of: contract.id) else { return nil }
-        return index == 0 ? "常驻上行" : "常驻下行"
+        return index == 0 ? "上行" : "下行"
     }
 }
 
@@ -145,15 +152,18 @@ private struct TideQuoteCard: View {
 
     var body: some View {
         TideCard {
-            VStack(alignment: .leading, spacing: 15) {
-                HStack(alignment: .top, spacing: 8) {
-                    TideContractLabel(contract: row.contract, showsInstrumentID: false)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 6) {
+                    TideContractLabel(contract: row.contract, showsInstrumentID: false, compact: true)
                     Spacer(minLength: 0)
-                    if let pin { TideBadge(title: pin, color: .secondary, symbol: "pin.fill") }
+                    if let pin {
+                        TideBadge(title: pin, color: .secondary, symbol: "pin.fill")
+                            .help("菜单栏常驻\(pin)")
+                    }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 7) {
                     Text(row.price.map(PriceFormatting.compact) ?? "—")
-                        .font(TideStyle.price).monospacedDigit()
+                        .font(.system(size: 24, weight: .medium, design: .rounded)).monospacedDigit()
                         .foregroundStyle(row.price != nil && row.isStale ? TideStyle.secondaryText : Color.primary)
                         .lineLimit(1).minimumScaleFactor(0.55)
                         .help(row.price.map(PriceFormatting.exact) ?? "尚未收到\(row.contract.priceTitle)")
@@ -172,7 +182,7 @@ private struct TideQuoteCard: View {
                 if let supplement = row.supplement {
                     supplementGrid(supplement)
                 }
-                messageLine.frame(height: 15, alignment: .leading)
+                messageLine
             }
         }
         .help(technicalHelp)
@@ -189,14 +199,14 @@ private struct TideQuoteCard: View {
     }
 
     private func supplementGrid(_ supplement: TideOverviewSupplement) -> some View {
-        Grid(horizontalSpacing: 18, verticalSpacing: 7) {
+        Grid(horizontalSpacing: 12, verticalSpacing: 4) {
             GridRow {
                 supplementMetric("24h", supplement.change24h)
-                supplementMetric("资金费率", supplement.fundingRate)
+                supplementMetric("费率", supplement.fundingRate)
             }
             GridRow {
                 supplementMetric("距结算", supplement.fundingCountdown)
-                supplementMetric("较同所现货", supplement.premium)
+                supplementMetric("现货差", supplement.premium)
             }
         }
         .accessibilityElement(children: .combine)
@@ -226,8 +236,6 @@ private struct TideQuoteCard: View {
                 .truncationMode(.tail)
                 .help(text)
                 .textSelection(.enabled)
-        } else {
-            Color.clear
         }
     }
 

@@ -25,6 +25,16 @@ exchange selection, or diagnostics. GitHub receives the network information
 normally exposed by an HTTPS request. Automatic checks can be disabled from
 the application menu; manual checks remain available.
 
+The optional Kindle display is disabled by default. When the user enables it,
+TideTicker starts a read-only HTTP service on the Mac's local network and shows
+a URL containing a random access token. A device with that URL can read the
+current watchlist quotes, market-status fields, supplementary market data, and
+the latest pending alert while TideTicker is running. The service does not
+accept configuration changes and does not relay requests to a TideTicker
+server. Local HTTP traffic is not encrypted, so the feature should only be
+enabled on a trusted network. Disabling the feature or quitting TideTicker
+stops the service; resetting the address invalidates the previous token.
+
 Questions about this policy can be raised through the repository's public
 issue tracker without including private configuration, alert thresholds, IP
 addresses, proxy details, or diagnostic logs.

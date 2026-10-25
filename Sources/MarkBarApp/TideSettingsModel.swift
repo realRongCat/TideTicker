@@ -10,6 +10,16 @@ enum TideNotificationPermission: Equatable {
     case notDetermined, authorized, denied, unavailable, failed
 }
 
+struct TideAdvancedSettingsState: Equatable {
+    var showsCoinIcons = false
+    var automaticallyChecksForUpdates = true
+    var canChangeAutomaticChecks = false
+    var loginStatus: LoginItemStatus = .unknown
+    var loginError: String?
+    var loginIsBusy = false
+    var canManageLoginItem = false
+}
+
 @MainActor
 final class TideSettingsModel: ObservableObject {
     @Published var preferences: TidePreferences
@@ -21,6 +31,7 @@ final class TideSettingsModel: ObservableObject {
     @Published var messageKind: TideMessageKind = .info
     @Published var notificationStatus = "尚未启用通知"
     @Published var notificationPermission: TideNotificationPermission = .notDetermined
+    @Published private(set) var advancedSettings = TideAdvancedSettingsState()
 
     var onChange: ((TidePreferences) -> Void)?
     var onSelectExchange: ((Exchange) -> Void)?
@@ -30,6 +41,11 @@ final class TideSettingsModel: ObservableObject {
     var onOpenNotificationSettings: (() -> Void)?
     var onRefresh: (() -> Void)?
     var onAcknowledgeAlert: ((UUID) -> Void)?
+    var onSetCoinIcons: ((Bool) -> Void)?
+    var onSetAutomaticChecks: ((Bool) -> Void)?
+    var onSetLoginItem: ((Bool) -> Void)?
+    var onOpenLoginSettings: (() -> Void)?
+    var onCheckForUpdates: (() -> Void)?
     private var messageRevision: UInt64 = 0
 
     init(preferences: TidePreferences) {
@@ -52,6 +68,11 @@ final class TideSettingsModel: ObservableObject {
     func setNotification(_ permission: TideNotificationPermission, status: String) {
         notificationPermission = permission
         notificationStatus = status
+    }
+
+    func setAdvancedSettings(_ state: TideAdvancedSettingsState) {
+        guard state != advancedSettings else { return }
+        advancedSettings = state
     }
 
     /// Only explicit user edits call this method. App-owned state updates can

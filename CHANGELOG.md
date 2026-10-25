@@ -3,6 +3,17 @@
 This project follows semantic versioning from its first public source release.
 Dates use the Asia/Shanghai calendar date.
 
+## Unreleased
+
+- Add an opt-in, read-only Kindle dashboard served by the Mac on a trusted local network.
+- Preserve full spot/perpetual identity, quote freshness, continuity, supplementary data, and pending-alert state on the e-ink display.
+- Add configurable e-ink update pacing, ETag-based no-change responses, and a tokenized local address.
+- Add an optional jailbroken-Kindle kiosk companion with a local full-screen shell and explicit reboot-to-exit behavior.
+- Group device-specific settings under External Displays and keep failed listeners from exposing unusable addresses.
+- Keep the menu compact at a 20-instrument watchlist by showing two pinned quotes at the root and moving the rest and supplemental details into submenus.
+- Merge quote viewing and watchlist management into one Watch Market navigation item with Overview and Manage modes.
+- Use a compact responsive two-to-four-column grid for live quote cards.
+
 ## 0.2.0 - 2026-10-25
 
 - Add automatic and manual GitHub Release checks, a persistent update menu entry, and a non-activating update prompt.

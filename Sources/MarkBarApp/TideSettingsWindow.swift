@@ -3,35 +3,56 @@ import SwiftUI
 import MarkBarCore
 
 enum TideWindowPage: String, CaseIterable {
-    case overview, watchlist, source, alerts
+    case market, source, alerts, externalDisplay, advanced
 
     var title: String {
         switch self {
-        case .overview: return "行情概览"
-        case .watchlist: return "关注品种"
+        case .market: return "关注行情"
         case .source: return "行情来源"
         case .alerts: return "到价提醒"
+        case .externalDisplay: return "外部显示"
+        case .advanced: return "高级设置"
         }
     }
 
     var symbol: String {
         switch self {
-        case .overview: return "square.grid.2x2"
-        case .watchlist: return "star"
+        case .market: return "waveform.path"
         case .source: return "network"
         case .alerts: return "bell"
+        case .externalDisplay: return "display.2"
+        case .advanced: return "gearshape"
+        }
+    }
+}
+
+enum TideMarketMode: String, CaseIterable {
+    case overview, manage
+
+    var title: String {
+        switch self {
+        case .overview: return "概览"
+        case .manage: return "管理"
         }
     }
 }
 
 @MainActor
 private final class TideWindowNavigation: ObservableObject {
-    @Published private(set) var page: TideWindowPage = .overview
+    @Published private(set) var page: TideWindowPage = .market
+    @Published private(set) var marketMode: TideMarketMode = .overview
     var onChange: (() -> Void)?
 
     func select(_ page: TideWindowPage) {
         guard self.page != page else { return }
         self.page = page
+        onChange?()
+    }
+
+    func selectMarket(_ mode: TideMarketMode) {
+        guard page != .market || marketMode != mode else { return }
+        page = .market
+        marketMode = mode
         onChange?()
     }
 }
@@ -42,15 +63,18 @@ final class TideSettingsWindowController: NSWindowController, NSWindowDelegate {
     private let quotes = TideOverviewModel()
     private let watchlistDraft = TideWatchlistDraft()
     private let alertDraft = TideAlertDraft()
+    private let kindleModel: TideKindleModel
     private var isPresented = false
     var onRequestQuoteSnapshot: (() -> Void)?
     var onClose: (() -> Void)?
 
     var wantsQuoteUpdates: Bool {
-        isPresented && window?.isVisible == true && window?.isMiniaturized == false && navigation.page == .overview
+        isPresented && window?.isVisible == true && window?.isMiniaturized == false
+            && navigation.page == .market && navigation.marketMode == .overview
     }
 
-    init(model: TideSettingsModel) {
+    init(model: TideSettingsModel, kindleModel: TideKindleModel) {
+        self.kindleModel = kindleModel
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1020, height: 760),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -62,7 +86,11 @@ final class TideSettingsWindowController: NSWindowController, NSWindowDelegate {
         window.backgroundColor = TideStyle.canvasColor
         window.minSize = NSSize(width: 940, height: 700)
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: TideSettingsRoot(model: model, navigation: navigation, quotes: quotes, watchlistDraft: watchlistDraft, alertDraft: alertDraft))
+        window.contentView = NSHostingView(rootView: TideSettingsRoot(
+            model: model, navigation: navigation, quotes: quotes,
+            watchlistDraft: watchlistDraft, alertDraft: alertDraft,
+            kindleModel: kindleModel
+        ))
         window.center()
         window.setFrameAutosaveName("TideMainWindow")
         super.init(window: window)
@@ -75,8 +103,9 @@ final class TideSettingsWindowController: NSWindowController, NSWindowDelegate {
 
     required init?(coder: NSCoder) { return nil }
 
-    func present(page: TideWindowPage? = nil) {
-        if let page { navigation.select(page) }
+    func present(page: TideWindowPage? = nil, marketMode: TideMarketMode? = nil) {
+        if let marketMode { navigation.selectMarket(marketMode) }
+        else if let page { navigation.select(page) }
         isPresented = true
         if window?.isMiniaturized == true { window?.deminiaturize(nil) }
         showWindow(nil)
@@ -109,6 +138,7 @@ private struct TideSettingsRoot: View {
     let quotes: TideOverviewModel
     let watchlistDraft: TideWatchlistDraft
     let alertDraft: TideAlertDraft
+    let kindleModel: TideKindleModel
 
     var body: some View {
         HStack(spacing: 0) {
@@ -120,14 +150,23 @@ private struct TideSettingsRoot: View {
             VStack(spacing: 0) {
                 Group {
                     switch navigation.page {
-                    case .overview:
-                        TideOverviewPage(model: model, quotes: quotes, navigate: navigation.select)
-                    case .watchlist:
-                        TideWatchlistPage(model: model, draft: watchlistDraft)
+                    case .market:
+                        switch navigation.marketMode {
+                        case .overview:
+                            TideOverviewPage(model: model, quotes: quotes,
+                                             selectMode: navigation.selectMarket)
+                        case .manage:
+                            TideWatchlistPage(model: model, draft: watchlistDraft,
+                                              selectMode: navigation.selectMarket)
+                        }
                     case .source:
                         TideSourcePage(model: model)
                     case .alerts:
                         TideAlertsPage(model: model, draft: alertDraft)
+                    case .externalDisplay:
+                        TideExternalDisplayPage(model: kindleModel)
+                    case .advanced:
+                        TideAdvancedSettingsPage(model: model)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

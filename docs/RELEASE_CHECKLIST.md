@@ -11,6 +11,10 @@
 - [ ] Public Git files contain no build products, preferences, raw evidence, research output, local paths, proxy settings, alert thresholds, credentials, or opaque private archives.
 - [ ] Markdown links resolve locally and public documentation describes current behavior.
 - [ ] Third-party license and asset notices are present.
+- [ ] Kindle display is disabled by default in a clean profile, and enabling it triggers the macOS local-network permission path.
+- [ ] Kindle page, snapshot, health, wrong-token, unsupported-method, `HEAD`, ETag `304`, and LAN-address responses match the documented read-only contract.
+- [ ] At 600 x 800 and the target Kindle viewport, the page stays one card per row with no horizontal overflow, uneven quote-card heights, or truncated market/supplement fields; one/two-card expanded density and three/four-card compact density both fit, while toolbar hiding and user-triggered fullscreen degrade cleanly.
+- [ ] A supported physical Kindle opens the tokenized address and survives a two-hour page reload; record firmware/model and verify that reboot exits the optional always-on Companion kiosk.
 
 ## Public ad-hoc test package
 
@@ -38,6 +42,7 @@ Do not publish a binary as an official TideTicker release until all items below 
 - [ ] Complete real sleep/wake, restart, and login-item launch checks.
 - [ ] Complete an 8-hour resident run with memory, CPU, reconnect, and alert observations.
 - [ ] Exercise OKX, Binance, and Bybit under system-network mode; exercise OKX physical-direct mode. Record access-policy failures without bypassing them.
+- [ ] During the 8-hour run, keep a Kindle client connected and verify normal throttled updates, key-state immediate updates, ETag no-change polling, Mac sleep/wake recovery, Wi-Fi interruption recovery, and full-screen ghosting refreshes.
 - [ ] Confirm the installed app contains no development paths, private preferences, raw logs, or test fixtures.
 
 GitHub Release assets belong in the release page, not in the source tree.

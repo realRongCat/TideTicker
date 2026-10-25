@@ -13,6 +13,7 @@
 /outputs/
 /research/
 /HANDOFF.md
+/KindleCompanion/waf/settings.js
 
 # macOS and editor state
 .DS_Store

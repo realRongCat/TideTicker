@@ -72,6 +72,8 @@ final class TideUpdateController {
         return defaults.object(forKey: Self.automaticChecksKey) as? Bool ?? true
     }
 
+    var canSetAutomaticChecks: Bool { automaticChecksAllowed }
+
     init(currentVersion: AppVersion, fetcher: any ReleaseUpdateFetching,
          defaults: UserDefaults, automaticChecksAllowed: Bool,
          stateStore: (any ReleaseUpdateStateStoring)? = nil,

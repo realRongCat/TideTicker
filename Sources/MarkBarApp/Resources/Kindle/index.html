@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=600, initial-scale=1.0, user-scalable=yes">
+  <title>TideTicker</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100%; background: #fff; color: #000; }
+    body { font-family: Helvetica, Arial, "Droid Sans Fallback", sans-serif; font-size: 22px; font-weight: bold; line-height: 1.25; padding: 10px; -webkit-text-size-adjust: none; }
+    .header { display: table; width: 100%; border-bottom: 4px solid #000; padding: 3px 0 8px; }
+    .header-left, .header-right { display: table-cell; vertical-align: middle; }
+    .header-right { text-align: right; white-space: nowrap; }
+    h1 { margin: 0; font-size: 1.25em; letter-spacing: 0; }
+    .status { display: inline-block; border: 3px solid #000; padding: 3px 8px; font-size: .66em; }
+    .status.live { color: #fff; background: #000; }
+    .toolbar { display: table; width: 100%; padding: 8px 0; }
+    .toolbar-left, .toolbar-right { display: table-cell; vertical-align: middle; }
+    .toolbar-right { text-align: right; }
+    button { min-width: 42px; height: 42px; margin: 0 0 0 5px; padding: 2px 10px; border: 3px solid #000; background: #fff; color: #000; font: bold 22px/1 Helvetica, Arial, sans-serif; }
+    button:active { background: #000; color: #fff; }
+    .page-label { font-size: .72em; }
+    .alert { display: none; border: 4px solid #000; background: #000; color: #fff; padding: 9px 11px; margin-bottom: 8px; }
+    .alert-title { font-size: .78em; }
+    .alert-detail { font-size: .68em; margin-top: 4px; }
+    .quote { border: 3px solid #000; margin-bottom: 8px; padding: 8px 10px; min-height: 122px; }
+    .quote.stale { border-width: 6px; padding: 5px 7px; }
+    .quote-head { display: table; width: 100%; }
+    .quote-name, .quote-flags { display: table-cell; vertical-align: top; }
+    .quote-name { font-size: .82em; }
+    .quote-flags { text-align: right; font-size: .58em; white-space: nowrap; }
+    .flag { display: inline-block; border: 2px solid #000; padding: 2px 5px; margin-left: 3px; }
+    .flag.invert { background: #000; color: #fff; }
+    .instrument { display: none; font-size: .58em; margin-top: 3px; }
+    .price-row { display: table; width: 100%; margin-top: 3px; }
+    .price, .basis { display: table-cell; vertical-align: baseline; }
+    .price { font-family: Menlo, Monaco, monospace; font-size: 1.72em; line-height: 1.08; white-space: nowrap; }
+    .price.small { font-size: 1.3em; }
+    .basis { text-align: right; font-size: .58em; white-space: nowrap; }
+    .meta, .supplement { font-size: .58em; margin-top: 4px; }
+    .supplement { border-top: 2px solid #000; padding-top: 4px; }
+    .metrics { display: none; border-top: 3px solid #000; margin-top: 8px; padding-top: 6px; width: 100%; }
+    .metric { display: inline-block; vertical-align: top; width: 50%; padding: 3px 8px 3px 0; }
+    .metric-label { display: block; font-size: .5em; }
+    .metric-value { display: block; font-size: .72em; margin-top: 1px; }
+    .quote.expanded { padding: 12px 14px; }
+    .quote.expanded .quote-name { font-size: 1em; }
+    .quote.expanded .instrument { display: block; }
+    .quote.expanded .price { font-size: 2em; }
+    .quote.expanded .price.small { font-size: 1.55em; }
+    .quote.expanded .meta { font-size: .62em; margin-top: 6px; }
+    .quote.expanded .supplement { display: none; }
+    .quote.expanded .metrics { display: block; }
+    .quote.expanded.roomy { position: relative; }
+    .quote.expanded.roomy .quote-name { font-size: 1.08em; }
+    .quote.expanded.roomy .price-row { position: absolute; left: 14px; right: 14px; top: 25%; width: auto; }
+    .quote.expanded.roomy .price { font-size: 2.5em; }
+    .quote.expanded.roomy .price.small { font-size: 1.85em; }
+    .quote.expanded.roomy .meta { position: absolute; left: 14px; right: 14px; top: 44%; }
+    .quote.expanded.roomy .metrics { position: absolute; left: 14px; right: 14px; bottom: 12px; width: auto; }
+    .empty { border: 3px solid #000; padding: 28px 12px; text-align: center; }
+    .footer { border-top: 3px solid #000; padding-top: 6px; font-size: .55em; display: table; width: 100%; }
+    .footer-left, .footer-right { display: table-cell; }
+    .footer-right { text-align: right; }
+    #flash { display: none; position: fixed; z-index: 9999; left: 0; top: 0; right: 0; bottom: 0; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="flash"></div>
+  <div class="header"><div class="header-left"><h1>TideTicker</h1></div><div class="header-right"><span id="connection" class="status">连接中</span></div></div>
+  <div class="toolbar">
+    <div class="toolbar-left"><span id="source" class="page-label">等待行情</span></div>
+    <div class="toolbar-right">
+      <button type="button" title="上一页" onclick="previousPage()">&#8249;</button>
+      <span id="page" class="page-label">1/1</span>
+      <button type="button" title="下一页" onclick="nextPage()">&#8250;</button>
+      <button id="fullscreen" type="button" title="进入全屏" onclick="enterFullscreen()" style="display:none">全</button>
+      <button type="button" title="刷新墨水屏" onclick="flashScreen()">&#8635;</button>
+    </div>
+  </div>
+  <div id="alert" class="alert"><div id="alert-title" class="alert-title"></div><div id="alert-detail" class="alert-detail"></div></div>
+  <div id="quotes"></div>
+  <div class="footer"><span id="summary" class="footer-left"></span><span id="updated" class="footer-right"></span></div>
+  <script>
+    var currentData = null;
+    var currentPage = 1;
+    var lastETag = "";
+    var updateCount = 0;
+    var failureCount = 0;
+    var bootTime = (new Date()).getTime();
+    function queryParameter(name) {
+      var match = window.location.search.match(new RegExp("(?:[?&])" + name + "=([^&]*)"));
+      return match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
+    }
+    var apiBase = window.location.protocol === "file:" ? queryParameter("base") : "";
+    if (apiBase.indexOf("http://") !== 0) apiBase = "";
+    function text(el, value) { el.textContent = value === null || value === undefined ? "" : String(value); }
+    function node(tag, className, value) { var el = document.createElement(tag); if (className) el.className = className; if (value !== undefined) text(el, value); return el; }
+    function pageSize() { return 4; }
+    function hideBrowserChrome() {
+      var height = window.innerHeight || 800;
+      document.body.style.minHeight = (height + 1) + "px";
+      window.scrollTo(0, 1);
+    }
+    function enterFullscreen() {
+      var root = document.documentElement;
+      var request = root.requestFullscreen || root.webkitRequestFullscreen || root.webkitRequestFullScreen || root.mozRequestFullScreen;
+      if (request) {
+        try { request.call(root); } catch (e) {}
+      }
+      hideBrowserChrome();
+      setTimeout(function() {
+        var active = document.fullscreenElement || document.webkitFullscreenElement || document.webkitCurrentFullScreenElement || document.mozFullScreenElement;
+        if (!active) document.getElementById("fullscreen").style.display = "none";
+      }, 700);
+    }
+    function setupFullscreen() {
+      if (/[?&]companion=1(?:&|$)/.test(window.location.search) || window.self !== window.top) return;
+      var root = document.documentElement;
+      var request = root.requestFullscreen || root.webkitRequestFullscreen || root.webkitRequestFullScreen || root.mozRequestFullScreen;
+      if (request) document.getElementById("fullscreen").style.display = "inline-block";
+    }
+    function displayTime(value) { if (!value) return "--:--:--"; var match = String(value).match(/T(\d\d:\d\d:\d\d)/); return match ? match[1] : String(value); }
+    function addFlag(parent, label, inverted) { var flag = node("span", "flag" + (inverted ? " invert" : ""), label); parent.appendChild(flag); }
+    function addMetric(parent, label, value) {
+      if (value === null || value === undefined) return;
+      var metric = node("span", "metric");
+      metric.appendChild(node("span", "metric-label", label));
+      metric.appendChild(node("span", "metric-value", value));
+      parent.appendChild(metric);
+    }
+    function fitCards(count) {
+      if (!count) return;
+      var container = document.getElementById("quotes");
+      var cards = container.getElementsByClassName("quote");
+      var top = container.getBoundingClientRect ? container.getBoundingClientRect().top : 120;
+      var footerHeight = document.getElementById("summary").parentNode.offsetHeight || 28;
+      var available = (window.innerHeight || 800) - top - footerHeight - 18;
+      var target = Math.floor((available - ((count - 1) * 8)) / count);
+      var minimum = count <= 2 ? 210 : 122;
+      target = Math.max(minimum, target);
+      for (var i = 0; i < cards.length; i++) {
+        cards[i].style.minHeight = target + "px";
+        if (count <= 2 && target >= 280) cards[i].className += " roomy";
+      }
+    }
+    function renderAlert(data) {
+      var alertBox = document.getElementById("alert");
+      if (!data.pendingAlert) { alertBox.style.display = "none"; return; }
+      alertBox.style.display = "block";
+      text(document.getElementById("alert-title"), "待确认 · " + data.pendingAlert.title);
+      text(document.getElementById("alert-detail"), data.pendingAlert.condition + " · 最新 " + data.pendingAlert.latestPrice);
+    }
+    function renderQuotes(data) {
+      var container = document.getElementById("quotes");
+      while (container.firstChild) container.removeChild(container.firstChild);
+      var quotes = data.quotes || [];
+      if (!quotes.length) { container.appendChild(node("div", "empty", "尚未关注品种")); return; }
+      var size = pageSize();
+      var pages = Math.max(1, Math.ceil(quotes.length / size));
+      if (currentPage > pages) currentPage = pages;
+      var start = (currentPage - 1) * size;
+      var end = Math.min(start + size, quotes.length);
+      var visibleCount = end - start;
+      var expanded = visibleCount <= 2;
+      for (var i = start; i < end; i++) {
+        var quote = quotes[i];
+        var card = node("div", "quote" + (quote.isStale ? " stale" : "") + (expanded ? " expanded" : ""));
+        var head = node("div", "quote-head");
+        head.appendChild(node("div", "quote-name", quote.title));
+        var flags = node("div", "quote-flags");
+        if (quote.isStale) addFlag(flags, "过期", true);
+        if (quote.possiblyMissed) addFlag(flags, "可能漏报", false);
+        if (quote.hasError) addFlag(flags, "重试中", false);
+        head.appendChild(flags); card.appendChild(head);
+        card.appendChild(node("div", "instrument", quote.instrumentID + " · " + quote.marketKind));
+        var priceRow = node("div", "price-row");
+        priceRow.appendChild(node("div", "price" + (quote.price.length > 15 ? " small" : ""), quote.price));
+        priceRow.appendChild(node("div", "basis", quote.priceKind + " · " + quote.quoteCurrency));
+        card.appendChild(priceRow);
+        card.appendChild(node("div", "meta", "数据 " + displayTime(quote.dataTime) + " · " + (quote.route || "等待连接") + " · " + quote.continuity));
+        if (data.supplementalEnabled && quote.supplement) {
+          var extra = "24h " + quote.supplement.change24h;
+          if (quote.supplement.fundingRate !== null) extra += " · 费率 " + quote.supplement.fundingRate;
+          if (quote.supplement.fundingCountdown !== null) extra += " · 结算 " + quote.supplement.fundingCountdown;
+          if (quote.supplement.premium !== null) extra += " · 溢折价 " + quote.supplement.premium;
+          if (quote.supplement.isStale) extra += " · 补充行情过期";
+          card.appendChild(node("div", "supplement", extra));
+          var metrics = node("div", "metrics");
+          addMetric(metrics, "24 小时", quote.supplement.change24h);
+          addMetric(metrics, "资金费率", quote.supplement.fundingRate);
+          addMetric(metrics, "距结算", quote.supplement.fundingCountdown);
+          addMetric(metrics, "较同所现货", quote.supplement.premium);
+          card.appendChild(metrics);
+        }
+        container.appendChild(card);
+      }
+      text(document.getElementById("page"), currentPage + "/" + pages);
+      fitCards(visibleCount);
+    }
+    function render(data) {
+      currentData = data;
+      document.getElementById("connection").className = "status live";
+      text(document.getElementById("connection"), "在线");
+      text(document.getElementById("source"), data.exchange + " · " + data.sessionPhase);
+      text(document.getElementById("summary"), (data.quotes || []).length + " 个关注品种");
+      text(document.getElementById("updated"), "更新 " + displayTime(data.generatedAt));
+      renderAlert(data); renderQuotes(data);
+    }
+    function previousPage() { if (currentPage > 1) { currentPage--; if (currentData) renderQuotes(currentData); } }
+    function nextPage() { if (!currentData) return; var pages = Math.max(1, Math.ceil((currentData.quotes || []).length / pageSize())); if (currentPage < pages) { currentPage++; renderQuotes(currentData); } }
+    function flashScreen() {
+      var flash = document.getElementById("flash"); flash.style.display = "block"; flash.style.background = "#000";
+      setTimeout(function() { flash.style.background = "#fff"; setTimeout(function() { flash.style.display = "none"; }, 180); }, 180);
+      updateCount = 0;
+    }
+    function poll() {
+      var xhr = new XMLHttpRequest();
+      var url = apiBase + "api/v1/snapshot" + (lastETag ? "?etag=" + encodeURIComponent(lastETag) : "");
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status === 200) {
+          try { var data = JSON.parse(xhr.responseText); lastETag = xhr.getResponseHeader("ETag") || ""; failureCount = 0; render(data); updateCount++; if (updateCount >= 20) flashScreen(); } catch (e) {}
+        } else if (xhr.status !== 304) {
+          failureCount++;
+          if (failureCount === 2) { document.getElementById("connection").className = "status"; text(document.getElementById("connection"), "连接中断"); }
+        }
+      };
+      xhr.open("GET", url, true); xhr.send(null);
+    }
+    hideBrowserChrome();
+    setupFullscreen();
+    setTimeout(hideBrowserChrome, 500);
+    setTimeout(hideBrowserChrome, 1500);
+    poll(); setInterval(poll, 5000);
+    window.onresize = function() { if (currentData) renderQuotes(currentData); };
+    setInterval(function() { if ((new Date()).getTime() - bootTime >= 7200000) window.location.reload(true); }, 60000);
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import MarkBarCore
 struct TideWatchlistPage: View {
     @ObservedObject var model: TideSettingsModel
     @ObservedObject var draft: TideWatchlistDraft
+    let selectMode: (TideMarketMode) -> Void
 
     private var results: [Contract] {
         let query = draft.search.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -18,8 +19,11 @@ struct TideWatchlistPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TideStyle.sectionSpacing) {
-                TidePageHeading(title: "关注品种", subtitle: "管理现货、USDT 永续与币本位永续，为菜单栏选择最多两条常驻报价。") {
-                    TideBadge(title: "\(model.preferences.watchlist.count) / 20 个关注", symbol: "star.fill")
+                TidePageHeading(title: "关注行情", subtitle: "管理现货、USDT 永续与币本位永续，为菜单栏选择最多两条常驻报价。") {
+                    HStack(spacing: 10) {
+                        TideMarketModePicker(selection: .manage, onSelect: selectMode)
+                        TideBadge(title: "\(model.preferences.watchlist.count) / 20 个关注", symbol: "star.fill")
+                    }
                 }
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: TideStyle.cardGap) {

@@ -102,6 +102,26 @@ extension TidePageHeading where Accessory == EmptyView {
     }
 }
 
+struct TideMarketModePicker: View {
+    let selection: TideMarketMode
+    let onSelect: (TideMarketMode) -> Void
+
+    var body: some View {
+        Picker("关注行情视图", selection: Binding(
+            get: { selection },
+            set: { mode in onSelect(mode) }
+        )) {
+            ForEach(TideMarketMode.allCases, id: \.self) { mode in
+                Text(mode.title).tag(mode)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .frame(width: 156)
+        .accessibilityLabel("关注行情视图")
+    }
+}
+
 struct TideSectionHeading: View {
     let title: String
     let symbol: String
@@ -157,15 +177,18 @@ struct TideEmptyState: View {
 struct TideContractLabel: View {
     let contract: Contract
     var showsInstrumentID = true
+    var compact = false
     var body: some View {
-        HStack(spacing: 12) {
-            TideCoinAvatar(symbol: contract.symbol)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(contract.displayTitle).font(TideStyle.label)
+        HStack(spacing: compact ? 8 : 12) {
+            TideCoinAvatar(symbol: contract.symbol, size: compact ? 26 : 32)
+            VStack(alignment: .leading, spacing: compact ? 2 : 4) {
+                Text(compact ? contract.pairTitle : contract.displayTitle).font(TideStyle.label)
                     .lineLimit(1).truncationMode(.middle).help(contract.displayTitle)
-                Text(showsInstrumentID
-                     ? "\(contract.exchange.title) · \(contract.priceTitle) · \(contract.instrumentID)"
-                     : "\(contract.exchange.title) · \(contract.priceTitle)")
+                Text(compact
+                     ? "\(contract.marketKind.title) · \(contract.priceTitle)"
+                     : showsInstrumentID
+                         ? "\(contract.exchange.title) · \(contract.priceTitle) · \(contract.instrumentID)"
+                         : "\(contract.exchange.title) · \(contract.priceTitle)")
                     .font(TideStyle.caption).foregroundStyle(TideStyle.secondaryText)
                     .lineLimit(1).truncationMode(.middle).help(contract.instrumentID)
             }
@@ -176,14 +199,15 @@ struct TideContractLabel: View {
 @MainActor
 struct TideCoinAvatar: View {
     let symbol: String
+    var size: CGFloat = 32
 
     var body: some View {
-        Image(nsImage: TideCoinIcon.image(for: symbol, size: 32))
+        Image(nsImage: TideCoinIcon.image(for: symbol, size: size))
             .renderingMode(.original)
             .resizable()
             .interpolation(.high)
-            .frame(width: 32, height: 32)
-            .frame(width: 36, height: 36)
+            .frame(width: size, height: size)
+            .frame(width: size + 4, height: size + 4)
             .accessibilityHidden(true)
     }
 }

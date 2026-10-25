@@ -24,7 +24,7 @@ struct TideAlertsPage: View {
                 alertBoundary
                 if model.preferences.watchlist.isEmpty {
                     TideCard {
-                        TideEmptyState(symbol: "bell.slash", title: "先添加关注品种", detail: "在「关注品种」中选择市场后，即可创建到价提醒。", compact: true)
+                        TideEmptyState(symbol: "bell.slash", title: "先添加关注品种", detail: "在「关注行情」的「管理」中选择市场后，即可创建到价提醒。", compact: true)
                     }
                 } else {
                     composer

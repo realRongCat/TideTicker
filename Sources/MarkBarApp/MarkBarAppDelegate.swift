@@ -32,25 +32,21 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private let menu = NSMenu()
     private var statusItem: NSStatusItem?
     private var contractItems: [Contract: NSMenuItem] = [:]
+    private var marketDetailItems: [Contract: NSMenuItem] = [:]
     private var timeItems: [Contract: NSMenuItem] = [:]
     private var errorItems: [Contract: NSMenuItem] = [:]
     private let quoteStatusItem = NSMenuItem(title: "行情状态", action: nil, keyEquivalent: "")
     private let sourceItem = NSMenuItem(title: "行情来源与设置…", action: nil, keyEquivalent: ",")
     private let alertsItem = NSMenuItem(title: "到价提醒…", action: nil, keyEquivalent: "3")
+    private let externalDisplayItem = NSMenuItem(title: "外部显示…", action: nil, keyEquivalent: "")
     private let recentAlertItem = NSMenuItem(title: "最近提醒", action: nil, keyEquivalent: "")
-    private let marketDetailsItem = NSMenuItem(title: "显示补充行情", action: nil, keyEquivalent: "")
     private let refreshItem = NSMenuItem(title: "立即刷新", action: nil, keyEquivalent: "r")
     private let applicationRefreshItem = NSMenuItem(title: "立即刷新", action: nil, keyEquivalent: "r")
     private let updateAvailableItem = NSMenuItem(title: "发现新版本", action: nil, keyEquivalent: "")
     private let checkUpdatesItem = NSMenuItem(title: "检查更新…", action: nil, keyEquivalent: "")
     private let applicationCheckUpdatesItem = NSMenuItem(title: "检查更新…", action: nil, keyEquivalent: "")
-    private let automaticUpdatesItem = NSMenuItem(title: "自动检查更新", action: nil, keyEquivalent: "")
     private let aboutItem = NSMenuItem(title: "关于 TideTicker", action: nil, keyEquivalent: "")
     private let applicationAboutItem = NSMenuItem(title: "关于 TideTicker", action: nil, keyEquivalent: "")
-    private let symbolStyleItem = NSMenuItem(title: "菜单栏使用币种图标", action: nil, keyEquivalent: "")
-    private let loginItem = NSMenuItem(title: "登录时启动", action: nil, keyEquivalent: "")
-    private let loginInfoItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-    private let loginSettingsItem = NSMenuItem(title: "在系统设置中管理登录项…", action: nil, keyEquivalent: "")
     private var statusRows: [CompactStatusImage.Row] = []
     private var details: [Contract: MarketDetails] = [:]
     private var referenceSpots: [Contract: MarkQuote] = [:]
@@ -71,6 +67,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     private var alertEngine = PriceAlertEngine()
     private let notificationDelegate = TideNotificationDelegate()
     private var updateController: TideUpdateController?
+    private let kindleController: TideKindleController
     private var updateMenuState: TideUpdateMenuState = .idle
     private var notificationAuthorizationStatus: UNAuthorizationStatus?
     private var lastPresentedNotificationID: String?
@@ -107,6 +104,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         catalogueClient = MarketDataClient(networkMode: loaded.networkMode)
         detailsClient = MarketDataClient(networkMode: loaded.networkMode)
         settingsModel = TideSettingsModel(preferences: loaded)
+        kindleController = TideKindleController(defaults: .standard)
         let profileData = preferencesURL.flatMap { try? Data(contentsOf: $0.appendingPathExtension("profiles.json")) }
             ?? (preferencesURL == nil ? UserDefaults.standard.data(forKey: Self.profilesKey) : nil)
         sourceProfiles = profileData.flatMap { try? JSONDecoder().decode([String: TidePreferences].self, from: $0) } ?? [:]
@@ -149,6 +147,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         self.timer = timer
         startQuoteUpdates()
         reconcileQuoteSession()
+        kindleController.startIfEnabled()
         if ProcessInfo.processInfo.arguments.contains("--show-settings") { showSettings() }
         if ProcessInfo.processInfo.arguments.contains("--show-main-window") { showMainWindow() }
     }
@@ -176,41 +175,52 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         settingsModel.onOpenNotificationSettings = { [weak self] in self?.openNotificationSettings() }
         settingsModel.onRefresh = { [weak self] in self?.refreshNow() }
         settingsModel.onAcknowledgeAlert = { [weak self] id in self?.acknowledgeAlert(id) }
+        settingsModel.onSetCoinIcons = { [weak self] enabled in self?.setCoinIcons(enabled) }
+        settingsModel.onSetAutomaticChecks = { [weak self] enabled in self?.setAutomaticUpdateChecks(enabled) }
+        settingsModel.onSetLoginItem = { [weak self] enabled in self?.setLoginItemEnabled(enabled) }
+        settingsModel.onOpenLoginSettings = { [weak self] in self?.openLoginSettings() }
+        settingsModel.onCheckForUpdates = { [weak self] in self?.checkForUpdates() }
+        kindleController.configureCallbacks()
     }
 
     private func buildMenu() {
         // Reused items may currently belong to a nested menu retained by AppKit.
-        for item in [refreshItem, quoteStatusItem, recentAlertItem, sourceItem, alertsItem, symbolStyleItem,
-                     marketDetailsItem, loginItem, loginInfoItem, loginSettingsItem, automaticUpdatesItem,
+        for item in [refreshItem, quoteStatusItem, recentAlertItem, sourceItem, alertsItem, externalDisplayItem,
                      updateAvailableItem, checkUpdatesItem, aboutItem] {
             item.menu?.removeItem(item)
         }
         menu.removeAllItems()
-        contractItems.removeAll(); timeItems.removeAll(); errorItems.removeAll()
+        contractItems.removeAll(); marketDetailItems.removeAll(); timeItems.removeAll(); errorItems.removeAll()
         menu.autoenablesItems = false
         menu.delegate = self
         addAction("显示主窗口", symbol: "macwindow", action: #selector(showMainWindow), key: "1")
         menu.addItem(.separator())
+        let pinnedContracts = preferences.pinnedContracts
+        let pinnedIDs = Set(pinnedContracts.map(\.id))
+        let remainingContracts = preferences.watchlist.filter { !pinnedIDs.contains($0.id) }
+        let headingDetail = preferences.watchlist.isEmpty
+            ? "尚未关注品种"
+            : "\(preferences.watchlist.count) 个关注 · \(pinnedContracts.count) 条常驻"
         TideMenuStyle.setStacked(addLabel("关注行情"), title: "关注行情 · \(preferences.exchange.title)",
-                                 detail: "现货与永续 · 按市场价格口径", heading: true)
+                                 detail: headingDetail, heading: true)
         if preferences.watchlist.isEmpty {
             addAction("添加第一个关注品种…", symbol: "plus.circle", action: #selector(showWatchlist))
         }
-        for contract in preferences.watchlist {
-            let price = NSMenuItem(title: contract.symbol, action: nil, keyEquivalent: "")
-            price.image = TideCoinIcon.image(for: contract.symbol, size: 18)
-            menu.addItem(price)
-            contractItems[contract] = price
-            let detailMenu = NSMenu(title: contract.symbol)
-            detailMenu.autoenablesItems = false
-            price.submenu = detailMenu
-            addLabel("\(contract.displayTitle) · \(contract.priceTitle)", to: detailMenu)
-            timeItems[contract] = addLabel("等待首个报价", to: detailMenu)
-            errorItems[contract] = addLabel("", to: detailMenu)
-            errorItems[contract]?.isHidden = true
-            detailMenu.addItem(.separator())
-            addAction("查看行情概览", symbol: "square.grid.2x2", action: #selector(showOverview), to: detailMenu)
-            addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), to: detailMenu)
+        for contract in pinnedContracts {
+            addQuoteItem(for: contract, to: menu)
+        }
+        if !remainingContracts.isEmpty {
+            let remainingMenu = NSMenu(title: pinnedContracts.isEmpty ? "全部关注品种" : "其他关注品种")
+            remainingMenu.autoenablesItems = false
+            let remainingItem = NSMenuItem(title: remainingMenu.title, action: nil, keyEquivalent: "")
+            remainingItem.image = TideMenuStyle.icon("list.bullet")
+            remainingItem.submenu = remainingMenu
+            TideMenuStyle.setColumns(remainingItem, remainingMenu.title,
+                                     "\(remainingContracts.count) 个", muted: true)
+            menu.addItem(remainingItem)
+            for contract in remainingContracts {
+                addQuoteItem(for: contract, to: remainingMenu)
+            }
         }
         quoteStatusItem.action = #selector(showSource); quoteStatusItem.target = self
         menu.addItem(quoteStatusItem)
@@ -221,19 +231,10 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), key: "2")
         configureAction(alertsItem, symbol: "bell", action: #selector(showAlerts)); menu.addItem(alertsItem)
         configureAction(sourceItem, symbol: "slider.horizontal.3", action: #selector(showSource)); menu.addItem(sourceItem)
+        configureAction(externalDisplayItem, symbol: "display.2", action: #selector(showExternalDisplay))
+        menu.addItem(externalDisplayItem)
         menu.addItem(.separator())
-        let options = NSMenu(title: "显示与启动")
-        options.autoenablesItems = false
-        let optionsItem = NSMenuItem(title: "显示与启动", action: nil, keyEquivalent: "")
-        optionsItem.image = TideMenuStyle.icon("switch.2"); optionsItem.submenu = options
-        menu.addItem(optionsItem)
-        configureAction(symbolStyleItem, symbol: "bitcoinsign.circle", action: #selector(toggleCoinIcons)); options.addItem(symbolStyleItem)
-        configureAction(marketDetailsItem, symbol: "chart.bar.xaxis", action: #selector(toggleMarketDetails)); options.addItem(marketDetailsItem)
-        options.addItem(.separator())
-        configureAction(loginItem, symbol: "power", action: #selector(toggleLoginItem)); options.addItem(loginItem)
-        loginInfoItem.isEnabled = false; loginInfoItem.indentationLevel = 1; loginInfoItem.isHidden = true
-        options.addItem(loginInfoItem)
-        configureAction(loginSettingsItem, symbol: "gearshape", action: #selector(openLoginSettings)); options.addItem(loginSettingsItem)
+        addAction("高级设置…", symbol: "gearshape", action: #selector(showAdvancedSettings))
         menu.addItem(.separator())
         configureAction(updateAvailableItem, symbol: "arrow.down.circle.fill", action: #selector(showAvailableUpdate))
         menu.addItem(updateAvailableItem)
@@ -243,8 +244,6 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         menu.addItem(aboutItem)
         menu.addItem(.separator())
         addAction("退出 TideTicker", symbol: "rectangle.portrait.and.arrow.right", action: #selector(quitApp), key: "q")
-        configureAction(automaticUpdatesItem, symbol: "arrow.triangle.2.circlepath", action: #selector(toggleAutomaticUpdates))
-        options.insertItem(automaticUpdatesItem, at: max(0, options.numberOfItems - 3))
         renderUpdateItems()
     }
 
@@ -268,6 +267,26 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         return item
     }
 
+    private func addQuoteItem(for contract: Contract, to parent: NSMenu) {
+        let price = NSMenuItem(title: contract.symbol, action: nil, keyEquivalent: "")
+        price.image = TideCoinIcon.image(for: contract.symbol, size: 18)
+        parent.addItem(price)
+        contractItems[contract] = price
+
+        let detailMenu = NSMenu(title: contract.symbol)
+        detailMenu.autoenablesItems = false
+        price.submenu = detailMenu
+        addLabel("\(contract.displayTitle) · \(contract.priceTitle)", to: detailMenu)
+        marketDetailItems[contract] = addLabel("补充行情等待加载", to: detailMenu)
+        marketDetailItems[contract]?.isHidden = true
+        timeItems[contract] = addLabel("等待首个报价", to: detailMenu)
+        errorItems[contract] = addLabel("", to: detailMenu)
+        errorItems[contract]?.isHidden = true
+        detailMenu.addItem(.separator())
+        addAction("查看行情概览", symbol: "square.grid.2x2", action: #selector(showOverview), to: detailMenu)
+        addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), to: detailMenu)
+    }
+
     private func buildApplicationMenu() {
         let main = NSMenu()
         let app = NSMenu(title: "TideTicker")
@@ -281,6 +300,8 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         addAction("管理关注品种…", symbol: "star", action: #selector(showWatchlist), key: "2", to: app)
         addAction("到价提醒…", symbol: "bell", action: #selector(showAlerts), key: "3", to: app)
         addAction("行情来源与设置…", symbol: "slider.horizontal.3", action: #selector(showSource), key: ",", to: app)
+        addAction("外部显示…", symbol: "display.2", action: #selector(showExternalDisplay), to: app)
+        addAction("高级设置…", symbol: "gearshape", action: #selector(showAdvancedSettings), to: app)
         app.addItem(.separator())
         configureAction(applicationRefreshItem, symbol: "arrow.clockwise", action: #selector(refreshNow))
         app.addItem(applicationRefreshItem)
@@ -359,10 +380,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     }
 
     private func renderUpdateItems() {
-        let automaticallyChecks = updateController?.automaticallyChecks
-            ?? (defaults.object(forKey: TideUpdateController.automaticChecksKey) as? Bool ?? true)
-        automaticUpdatesItem.state = automaticallyChecks ? .on : .off
-        automaticUpdatesItem.isEnabled = updateController != nil
+        syncAdvancedSettings()
         switch updateMenuState {
         case .idle:
             updateAvailableItem.isHidden = true
@@ -715,6 +733,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
             if row.possiblyMissed { value += "，行情可能漏报" }
             return value
         }.joined(separator: "；"))
+        let pinnedIDs = Set(pinned.map(\.id))
         for contract in preferences.watchlist {
             let state = quoteState(for: contract, now: now)
             let entry = state.entry
@@ -725,13 +744,28 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
                 if state.possiblyMissed { notes.append("可能漏报 · \(state.continuity.description)") }
                 if entry.lastError != nil { notes.append("请求失败 · 等待重试") }
                 else if entry.quote == nil { notes.append("等待首个报价") }
-                if preferences.showsMarketDetails {
-                    notes += marketSummaryParts(for: contract, now: now)
+                if pinnedIDs.contains(contract.id) {
+                    TideMenuStyle.setQuote(item, symbol: contract.displayTitle,
+                                           price: formattedPrice(entry.quote), notes: notes, muted: stale)
+                } else {
+                    var compactPrice = formattedPrice(entry.quote)
+                    if stale { compactPrice += " · 过期" }
+                    else if entry.lastError != nil { compactPrice += " · 失败" }
+                    else if entry.quote == nil { compactPrice += " · 等待" }
+                    else if state.possiblyMissed { compactPrice += " · 可能漏报" }
+                    TideMenuStyle.setColumns(item, contract.displayTitle, compactPrice,
+                                             emphasized: false, muted: stale)
                 }
-                TideMenuStyle.setQuote(item, symbol: contract.displayTitle, price: formattedPrice(entry.quote), notes: notes, muted: stale)
                 item.setAccessibilityLabel((["\(contract.displayTitle)，\(contract.priceTitle) \(formattedPrice(entry.quote)) \(contract.quoteCurrency)"] + notes).joined(separator: "；"))
             }
             contractItems[contract]?.toolTip = detailText(for: contract, now: now)
+            if let detailItem = marketDetailItems[contract] {
+                detailItem.isHidden = !preferences.showsMarketDetails
+                if preferences.showsMarketDetails {
+                    TideMenuStyle.setStacked(detailItem, title: "补充行情",
+                                             detail: marketSummaryParts(for: contract, now: now).joined(separator: "\n"))
+                }
+            }
             if let quote = entry.quote {
                 timeItems[contract]?.title = "\(stale ? "已过期 · " : "")数据 \(clockFormatter.string(from: quote.dataTime)) · 收到 \(clockFormatter.string(from: quote.receivedAt))"
             } else { timeItems[contract]?.title = entry.lastError == nil ? "等待首个报价" : "暂无报价 · 等待重试" }
@@ -747,8 +781,6 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         refreshItem.isEnabled = !sleeping && !resuming && !busy && !terminating && !preferences.watchlist.isEmpty
         applicationRefreshItem.title = refreshItem.title
         applicationRefreshItem.isEnabled = refreshItem.isEnabled
-        symbolStyleItem.state = showsCoinIcons ? .on : .off
-        marketDetailsItem.state = preferences.showsMarketDetails ? .on : .off
         let freshCount = preferences.watchlist.filter {
             let state = quoteState(for: $0, now: now)
             return state.entry.quote != nil && !state.isStale
@@ -762,25 +794,42 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         else if gapCount > 0 { stateText = "\(quoteSnapshot.phase.title) · \(freshCount)/\(preferences.watchlist.count) 新鲜" }
         else if errorCount > 0 { stateText = "\(errorCount) 项请求失败 · \(freshCount)/\(preferences.watchlist.count) 新鲜" }
         else { stateText = "\(quoteSnapshot.phase.title) · \(freshCount)/\(preferences.watchlist.count) 新鲜" }
-        TideMenuStyle.setStacked(quoteStatusItem, title: "行情状态", detail: stateText)
+        TideMenuStyle.setColumns(quoteStatusItem, "行情状态", stateText, muted: true)
         quoteStatusItem.image = TideMenuStyle.icon("waveform.path.ecg", color: errorCount > 0 ? .systemOrange : .secondaryLabelColor)
         quoteStatusItem.toolTip = "\(preferences.exchange.title) · \(preferences.networkMode.title)；点击检查行情来源与网络连接"
         TideMenuStyle.setColumns(alertsItem, "到价提醒…", "\(preferences.alerts.filter(\.isEnabled).count) 条启用", muted: true)
         if let pending = preferences.pendingAlerts.max(by: { $0.latestTriggeredAt < $1.latestTriggeredAt }) {
+            recentAlertItem.isHidden = false
             TideMenuStyle.setStacked(recentAlertItem, title: "待确认 · \(pending.contract.displayTitle)",
                                      detail: "\(pending.direction.title) \(PriceFormatting.exact(pending.threshold)) · 最新 \(PriceFormatting.compact(pending.latestPrice))")
             recentAlertItem.image = TideMenuStyle.icon("bell.badge.fill", color: .systemOrange)
         } else {
-            TideMenuStyle.setStacked(recentAlertItem, title: "最近提醒", detail: "没有待确认提醒")
-            recentAlertItem.image = TideMenuStyle.icon("bell", color: .secondaryLabelColor)
+            recentAlertItem.isHidden = true
         }
         TideMenuStyle.setColumns(sourceItem, "行情来源与设置…", preferences.networkMode.title, muted: true)
+        TideMenuStyle.setColumns(externalDisplayItem, "外部显示…", externalDisplayStatus, muted: true)
         updateOverview(now: now)
         renderLoginItem()
+        let kindleSnapshot = KindleDisplaySnapshotFactory.make(
+            preferences: preferences, quoteSnapshot: quoteSnapshot,
+            details: details, referenceSpots: referenceSpots, now: now
+        )
+        kindleController.publish(kindleSnapshot)
         writeSnapshot(now: now)
     }
 
     private func formattedPrice(_ quote: MarkQuote?) -> String { quote.map { PriceFormatting.compact($0.price) } ?? "--" }
+
+    private var externalDisplayStatus: String {
+        switch kindleController.model.serviceState {
+        case .disabled: return "均未开启"
+        case .starting: return "Kindle 正在启动"
+        case .ready: return "Kindle 已开启"
+        case .awaitingAddress: return "Kindle 等待网络"
+        case .failed, .stopped: return "Kindle 不可用"
+        }
+    }
+
     private func quoteState(for contract: Contract, now: Date) -> MainQuoteState {
         quoteSnapshot.state(for: contract) ?? MainQuoteState(
             contract: contract, entry: QuoteEntry(), isStale: false,
@@ -871,11 +920,13 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         nextDetailsRefresh.removeAll()
         refreshDetailsIfNeeded()
     }
-    @objc private func toggleCoinIcons() { defaults.set(!showsCoinIcons, forKey: Self.symbolStyleKey); render() }
-    @objc private func toggleMarketDetails() { settingsModel.update { $0.showsMarketDetails.toggle() } }
-    @objc private func toggleAutomaticUpdates() {
+    private func setCoinIcons(_ enabled: Bool) {
+        defaults.set(enabled, forKey: Self.symbolStyleKey)
+        render()
+    }
+    private func setAutomaticUpdateChecks(_ enabled: Bool) {
         guard let updateController else { return }
-        updateController.setAutomaticallyChecks(!updateController.automaticallyChecks)
+        updateController.setAutomaticallyChecks(enabled)
     }
     @objc private func checkForUpdates() { updateController?.checkNow() }
     @objc private func showAvailableUpdate() { updateController?.presentAvailableUpdate() }
@@ -896,21 +947,24 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         ])
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
-    @objc private func showMainWindow() { presentWindow() }
-    @objc private func showOverview() { presentWindow(page: .overview) }
-    @objc private func showWatchlist() { presentWindow(page: .watchlist) }
+    @objc private func showMainWindow() { presentWindow(page: .market, marketMode: .overview) }
+    @objc private func showOverview() { presentWindow(page: .market, marketMode: .overview) }
+    @objc private func showWatchlist() { presentWindow(page: .market, marketMode: .manage) }
     @objc private func showSource() { presentWindow(page: .source) }
     @objc private func showAlerts() { presentWindow(page: .alerts) }
-    @objc private func showSettings() { presentWindow(page: .watchlist) }
+    @objc private func showExternalDisplay() { presentWindow(page: .externalDisplay) }
+    @objc private func showAdvancedSettings() { presentWindow(page: .advanced) }
+    @objc private func showSettings() { presentWindow(page: .market, marketMode: .manage) }
 
-    private func presentWindow(page: TideWindowPage? = nil) {
+    private func presentWindow(page: TideWindowPage? = nil, marketMode: TideMarketMode? = nil) {
         if settingsWindow == nil {
-            let controller = TideSettingsWindowController(model: settingsModel)
+            let controller = TideSettingsWindowController(model: settingsModel,
+                                                          kindleModel: kindleController.model)
             controller.onRequestQuoteSnapshot = { [weak self] in self?.updateOverview(now: Date()) }
             controller.onClose = { [weak self] in self?.cancelConnectionDiagnostic() }
             settingsWindow = controller
         }
-        settingsWindow?.present(page: page)
+        settingsWindow?.present(page: page, marketMode: marketMode)
         updateOverview(now: Date())
         if settingsModel.catalogue.isEmpty && !settingsModel.catalogLoading { loadCatalogue(exchange: preferences.exchange) }
         refreshDetailsIfNeeded()
@@ -1129,33 +1183,36 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
         }
     }
     private func renderLoginItem() {
-        let status = loginMonitor.status
-        loginItem.isEnabled = Bundle.main.bundleURL.pathExtension == "app" && !terminating && preferencesURL == nil
-            && !loginMonitor.isBusy && status != .unknown
-        switch status {
-        case .enabled: loginItem.title = "登录时启动"; loginItem.state = .on
-        case .requiresApproval: loginItem.title = "登录时启动（待系统批准）"; loginItem.state = .mixed
-        case .notRegistered: loginItem.title = "登录时启动"; loginItem.state = .off
-        case .notFound: loginItem.title = "登录时启动（应用不可用）"; loginItem.state = .off
-        case .unknown: loginItem.title = "登录时启动（正在检查…）"; loginItem.state = .off
-        }
-        if status == .requiresApproval {
-            loginInfoItem.title = "请在系统设置中允许此应用登录启动"; loginInfoItem.toolTip = nil; loginInfoItem.isHidden = false
-        } else if let loginError = loginMonitor.error {
-            loginInfoItem.title = "登录启动设置失败，可点击开关重试"; loginInfoItem.toolTip = loginError; loginInfoItem.isHidden = false
-        } else { loginInfoItem.isHidden = true }
+        syncAdvancedSettings()
     }
-    @objc private func toggleLoginItem() {
-        guard !terminating, preferencesURL == nil, loginMonitor.request(operation: .toggle) else { return }
+    private func setLoginItemEnabled(_ enabled: Bool) {
+        let isRegistered = loginMonitor.status == .enabled || loginMonitor.status == .requiresApproval
+        guard enabled != isRegistered, !terminating, preferencesURL == nil,
+              loginMonitor.request(operation: .toggle) else { return }
         defaults.set(true, forKey: Self.loginConfiguredKey)
     }
-    @objc private func openLoginSettings() { SMAppService.openSystemSettingsLoginItems() }
+    private func syncAdvancedSettings() {
+        let automaticallyChecks = updateController?.automaticallyChecks
+            ?? (defaults.object(forKey: TideUpdateController.automaticChecksKey) as? Bool ?? true)
+        settingsModel.setAdvancedSettings(TideAdvancedSettingsState(
+            showsCoinIcons: showsCoinIcons,
+            automaticallyChecksForUpdates: automaticallyChecks,
+            canChangeAutomaticChecks: updateController?.canSetAutomaticChecks == true,
+            loginStatus: loginMonitor.status,
+            loginError: loginMonitor.error,
+            loginIsBusy: loginMonitor.isBusy,
+            canManageLoginItem: Bundle.main.bundleURL.pathExtension == "app"
+                && !terminating && preferencesURL == nil && loginMonitor.status != .unknown
+        ))
+    }
+    private func openLoginSettings() { SMAppService.openSystemSettingsLoginItems() }
     @objc private func quitApp() { NSApplication.shared.terminate(nil) }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateNow }
         terminating = true; generation &+= 1; catalogueGeneration &+= 1
         loginMonitor.stop()
         updateController?.stop()
+        kindleController.stop()
         timer?.invalidate(); cancelMarketTasks(); resumeTask?.cancel(); catalogueTask?.cancel()
         render()
         let catalogueClient = catalogueClient, detailsClient = detailsClient
@@ -1169,6 +1226,7 @@ final class MarkBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate 
     func applicationWillTerminate(_ notification: Notification) {
         loginMonitor.stop()
         updateController?.stop()
+        kindleController.stop()
         timer?.invalidate()
         quoteUpdatesTask?.cancel()
         NSWorkspace.shared.notificationCenter.removeObserver(self)

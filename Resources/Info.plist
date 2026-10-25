@@ -7,11 +7,12 @@
   <key>CFBundleExecutable</key><string>TideTicker</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.2.0</string>
-  <key>CFBundleVersion</key><string>2</string>
+  <key>CFBundleShortVersionString</key><string>0.3.0</string>
+  <key>CFBundleVersion</key><string>3</string>
   <key>NSHumanReadableCopyright</key><string>Copyright © 2026 rongcat</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSLocalNetworkUsageDescription</key><string>在用户启用 Kindle 展示后，通过可信局域网提供只读行情页面。</string>
   <key>NSPrincipalClass</key><string>NSApplication</string>
 </dict></plist>

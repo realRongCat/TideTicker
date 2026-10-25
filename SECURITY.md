@@ -23,3 +23,12 @@ TideTicker consumes public market data and sends local notifications. It does
 not hold exchange credentials, manage funds, or execute trades. Price alerts
 are observational and must not be treated as exchange-grade risk controls.
 
+The optional Kindle display exposes a read-only HTTP endpoint to the local
+network. It is disabled by default and protected by a random path token, but it
+does not provide TLS or user authentication. Anyone who can reach the Mac and
+obtain the full URL can read the displayed market data and latest pending-alert
+summary. Use it only on a trusted network, reset the address if it is disclosed,
+and disable the feature when it is not needed. Internet-facing deployment,
+port forwarding, remote configuration, and write access are outside the
+supported security scope.
+

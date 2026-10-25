@@ -61,11 +61,16 @@ done < <(xcrun otool -l "$task_app/Contents/MacOS/TideTicker" | awk '
   $1 == "cmd" && $2 == "LC_RPATH" { wanted = 1; next }
   wanted && $1 == "path" { sub(/^.*path /, ""); sub(/ \(offset.*$/, ""); print; wanted = 0 }
 ' | sort -u)
+if /usr/bin/strings "$task_app/Contents/MacOS/TideTicker" | /usr/bin/grep -F "$task_root" >/dev/null; then
+  printf 'Build contains a development checkout path; remove source-path literals before packaging.\n' >&2
+  exit 1
+fi
 cp "$task_root/Resources/Info.plist" "$task_app/Contents/Info.plist"
 bash "$task_root/scripts/build-icon.sh" "$task_app/Contents/Resources/AppIcon.icns" >/dev/null
 cp "$task_root/Resources/rongcat-avatar.jpg" "$task_app/Contents/Resources/CreatorAvatar.jpg"
 cp -R "$task_root/Sources/MarkBarApp/Resources/CoinIcons" "$task_app/Contents/Resources/CoinIcons"
 cp -R "$task_root/Sources/MarkBarApp/Resources/ExchangeIcons" "$task_app/Contents/Resources/ExchangeIcons"
+cp -R "$task_root/Sources/MarkBarApp/Resources/Kindle" "$task_app/Contents/Resources/Kindle"
 codesign --force --sign - "$task_app"
 codesign --verify --all-architectures --deep --strict "$task_app"
 # Replacing nested files leaves the bundle directory's old mtime intact.

@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>TideTicker</title>
+  <script src="/var/local/mesquite/shared/javascripts/Kindle.js"></script>
+  <script src="/var/local/mesquite/shared/javascripts/logging.js"></script>
+  <script src="/var/local/mesquite/shared/javascripts/eventing.js"></script>
+  <script src="/var/local/mesquite/shared/javascripts/object.js"></script>
+  <script src="/var/local/mesquite/shared/javascripts/storage.js"></script>
+  <script src="/var/local/mesquite/shared/javascripts/applicationManager.js"></script>
+  <script src="settings.js"></script>
+  <script>
+    (function () {
+      var closed = false;
+
+      function setFallback(message) {
+        setTimeout(function () {
+          var fallback = document.getElementById("fallback");
+          if (fallback) fallback.innerHTML = message;
+        }, 0);
+      }
+
+      function runInStatusBar(source) {
+        try {
+          kindle.messaging.sendMessage("com.lab126.pillow", "interrogatePillow", {
+            pillowId: "default_status_bar",
+            "function": source
+          });
+        } catch (error) {}
+      }
+
+      function restoreSystemUI() {
+        if (closed) return;
+        closed = true;
+        runInStatusBar("nativeBridge.showMe();nativeBridge.setIntLipcProperty('com.lab126.powerd','preventScreenSaver',0);");
+      }
+
+      function openDisplay() {
+        closed = false;
+        try { kindle.net.setWirelessState("on"); } catch (error) {}
+        runInStatusBar("nativeBridge.hideMe();nativeBridge.setIntLipcProperty('com.lab126.powerd','preventScreenSaver',1);");
+        var frame = document.getElementById("dashboard");
+        frame.src = "dashboard.html?companion=1&base=" + encodeURIComponent(TIDE_TICKER_URL);
+        frame.style.display = "block";
+        document.getElementById("fallback").style.display = "none";
+      }
+
+      if (typeof TIDE_TICKER_URL !== "string" || TIDE_TICKER_URL.indexOf("http://") !== 0) {
+        setFallback("TideTicker 尚未配对<br>请从 Mac 重新部署 Companion");
+        return;
+      }
+
+      Kindle.use(function (api) {
+        api.applicationManager.addEventListener("go", openDisplay);
+        api.applicationManager.addEventListener("pause", restoreSystemUI);
+        api.applicationManager.addEventListener("unload", restoreSystemUI);
+      });
+    }());
+  </script>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; color: #000; }
+    body { font: bold 28px/1.35 sans-serif; text-align: center; }
+    #dashboard { display: none; width: 100%; height: 100%; border: 0; }
+    #fallback { padding: 40px; }
+  </style>
+</head>
+<body>
+  <iframe id="dashboard" title="TideTicker"></iframe>
+  <div id="fallback">正在打开 TideTicker...</div>
+</body>
+</html>

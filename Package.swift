@@ -14,6 +14,7 @@ let package = Package(
                           resources: [
                             .copy("Resources/CoinIcons"),
                             .copy("Resources/ExchangeIcons"),
+                            .copy("Resources/Kindle"),
                           ]),
         .executableTarget(name: "MarkBarProbe", dependencies: ["MarkBarCore"]),
         .testTarget(name: "MarkBarCoreTests", dependencies: ["MarkBarCore"]),
