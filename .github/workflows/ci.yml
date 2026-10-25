@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scripts and metadata
+        run: |
+          bash -n scripts/*.sh
+          plutil -lint Resources/Info.plist
+      - name: Test
+        run: swift test
+      - name: Build application bundle
+        run: bash scripts/build-app.sh
+      - name: Verify local signature
+        run: codesign --verify --all-architectures --deep --strict dist/TideTicker.app

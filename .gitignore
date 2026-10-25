@@ -1,0 +1,26 @@
+# Swift Package Manager
+/.build/
+/.swiftpm/
+/Package.resolved
+
+# Local release products. Publish reviewed artifacts through GitHub Releases.
+/dist/
+
+# Local validation, research, and handoff material
+/docs/evidence/
+/docs/extension-assessment.md
+/docs/next-iteration-*.md
+/outputs/
+/research/
+/HANDOFF.md
+
+# macOS and editor state
+.DS_Store
+*.xcuserstate
+xcuserdata/
+
+# Isolated runtime state and diagnostics
+*.profiles.json
+*.ui-snapshot.json
+*.log
+

@@ -1,0 +1,13 @@
+Generated with the built-in image_gen tool on 2026-10-15 (Asia/Shanghai).
+Asset: tide-logo-black-white-20261015.png
+Transparent background: false
+
+Use case: logo-brand.
+Asset type: final standalone square logo for Tide, a refined macOS menu bar application that quietly follows cryptocurrency mark prices.
+Primary request: an original, premium minimalist Tide logo using ONLY white on a solid pure black background.
+Subject: one distinctive, compact white emblem that fuses a tidal wave with a subtle capital T monogram. A confident broad horizontal crest flows into a short central descending form; the negative space and flowing geometry suggest the rhythm of tides. It must feel like one thoughtfully designed symbol, not a collection of icons.
+Style: precise flat vector-like silhouette, strong clean geometry with restrained organic curves, optical balance, substantial shapes that remain legible at small app-icon sizes. Sophisticated and calm.
+Composition: square canvas, emblem optically centered, approximately 55–60 percent of canvas width, generous consistent black space all around. One logo only, presented frontally as the actual flat artwork, not a mockup or presentation sheet.
+Color palette: pure black #000000 background and pure white #FFFFFF mark; no gray shading or additional colors.
+Text: no wordmark, no caption, no slogan; the subtle T is part of the emblem itself.
+Avoid: gradients, glow, shadows, 3D, metallic effects, textures, outlines around the canvas, rounded-square container, literal coin imagery, Bitcoin symbols, candlestick charts, tiny details, extra decorations, watermarks.
