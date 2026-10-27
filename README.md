@@ -22,7 +22,17 @@
   · <a href="./CHANGELOG.md">更新记录</a>
 </p>
 
-![TideTicker 关注行情](./docs/images/tideticker-overview.png)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/tideticker-menubar-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/tideticker-menubar-light.png">
+    <img src="./docs/images/tideticker-menubar-light.png" width="288" alt="TideTicker 在 macOS 菜单栏常驻显示 BTC 和 ETH 价格">
+  </picture>
+  <br>
+  <sub>无需打开窗口，菜单栏常驻显示最多两条行情</sub>
+</p>
+
+![TideTicker 关注行情主窗口](./docs/images/tideticker-overview.jpg)
 
 ## ✨ 功能
 
@@ -32,6 +42,14 @@
 | **清晰报价口径**<br>现货看最新成交价，永续看标记价 | **永续风险快照**<br>资金费率、结算倒计时和同所现货溢折价 |
 | **本地到价提醒**<br>支持确认后重新布防，并明确提示可能漏报 | **版本感知**<br>自动发现 GitHub 稳定版 Release |
 | **Kindle 局域网展示**<br>同网只读墨水屏视图，可选越狱全屏 Companion | **清晰状态边界**<br>过期、断线、可能漏报和待确认均直接标示 |
+
+## 📖 Kindle 外屏
+
+<p align="center">
+  <img src="./docs/images/tideticker-kindle.png" width="360" alt="TideTicker 为 Kindle 墨水屏优化的三行情页面">
+</p>
+
+Mac 继续负责获取行情和判断提醒，Kindle 通过可信局域网读取只读页面。页面针对墨水屏排版与残影刷新做了适配，普通 Kindle 可直接使用体验版浏览器访问；越狱设备还可安装可选的全屏常亮 Companion。查看 [Kindle 使用说明](./docs/USER_GUIDE.md#外部显示kindle) 和 [Companion 安装说明](./KindleCompanion/README.md)。
 
 ## 📦 安装
 
